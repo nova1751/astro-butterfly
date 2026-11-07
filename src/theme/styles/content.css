@@ -158,7 +158,14 @@
   /* notes, tips, folding, tabs, span, checkbox, psw, bubble, site card → tag-plugins.css */
 
   /* ---- music embeds (music page) ---- */
-  .music-embed { min-height: 90px; color: var(--muted); }
+  /* Reserve the loaded player's height (body + list + borders) so the page
+     doesn't jump when it appears: 720px list on desktop (EMBED_LIST_HEIGHT in
+     music.ts), 300px on phones (MusicPlayer.astro). */
+  .music-embed { color: var(--muted); }
+  .music-embed:not(.aplayer, [data-failed]) { min-height: 812px; }
+  @media (max-width: 768px) {
+    .music-embed:not(.aplayer, [data-failed]) { min-height: 392px; }
+  }
 }
 
 /* =========================================================================

@@ -61,8 +61,10 @@ import { music } from '@/config';
   /* Time + five icons need ~160px; in narrow players the progress bar would
      collapse to nothing. Drop the rarely used volume / order / loop buttons
      (phones use hardware volume) so the bar keeps a usable width. */
-  :root .aplayer .aplayer-info { container-type: inline-size; }
-  @container (max-width: 240px) {
+  /* A media query, not a container query: container-type on .aplayer-info
+     would stop it sitting beside the floated cover, so it would drop below
+     it for a moment while the fixed player opens. */
+  @media (max-width: 360px) {
     :root .aplayer .aplayer-info .aplayer-controller .aplayer-volume-wrap,
     :root .aplayer .aplayer-info .aplayer-controller .aplayer-icon-order,
     :root .aplayer .aplayer-info .aplayer-controller .aplayer-icon-loop { display: none; }
@@ -135,12 +137,27 @@ import { music } from '@/config';
   }
   :root .aplayer.aplayer-fixed .aplayer-pic { border-radius: 0; }
   :root .aplayer.aplayer-fixed .aplayer-info { border-top: 0; }
+  /* No animation while APlayer builds the player and collapses it (music.ts). */
+  :root .aplayer.ap-init .aplayer-body,
+  :root .aplayer.ap-init .aplayer-list { transition: none !important; }
   :root .aplayer.aplayer-fixed .aplayer-list {
     margin-bottom: calc(var(--ap-fixed-height) + env(safe-area-inset-bottom));
     border: 1px solid var(--ap-line);
     border-bottom: 0;
     border-radius: 0 10px 0 0;
     background: var(--ap-bg);
+    /* One card with the body: same shadow, drawn above the body's (so its
+       upward shadow doesn't streak across the seam) and cut off at the bottom
+       edge where the body continues. */
+    position: relative;
+    z-index: 100;
+    box-shadow: var(--card-box-shadow);
+    clip-path: inset(-30px -30px 0 0);
+  }
+  :root[data-theme='dark'] .aplayer.aplayer-fixed .aplayer-list { box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04), var(--card-box-shadow); }
+  /* With the list open the body's top-right corner meets the list: square it. */
+  :root .aplayer.aplayer-fixed:has(.aplayer-list:not(.aplayer-list-hide)):not(.aplayer-narrow) :is(.aplayer-body, .aplayer-miniswitcher) {
+    border-top-right-radius: 0;
   }
   :root .aplayer.aplayer-fixed .aplayer-lrc {
     box-sizing: border-box;
@@ -149,7 +166,7 @@ import { music } from '@/config';
     bottom: calc(80px + env(safe-area-inset-bottom));
     /* Desktop-lyrics style (APlayer / NetEase / QQ Music): no panel, just text. One crisp
        1px shadow keeps the glyph edges readable without a visible glow. */
-    width: min(420px, calc(100vw - 48px));
+    width: min(80vw, 960px);
     height: 16px;
     margin: 0;
     padding: 0;
@@ -189,6 +206,7 @@ import { music } from '@/config';
   :root[data-theme='dark'] .aplayer.aplayer-fixed .aplayer-body { box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04), var(--card-box-shadow); }
 
   @media (max-width: 768px) {
+    /* shorter embed playlists on phones (content.css reserves the same height) */
     .music-embed.aplayer .aplayer-list,
     .music-embed.aplayer .aplayer-list ol {
       max-height: 300px !important;

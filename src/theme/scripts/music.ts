@@ -11,6 +11,10 @@ type APlayerInstance = {
 type APlayerCtor = new (o: object) => APlayerInstance;
 type Track = { name?: string; title?: string; artist?: string; author?: string; url: string; pic?: string; cover?: string; lrc?: string };
 
+/** Embed playlist height on desktop (300px on phones, MusicPlayer.astro);
+ * `.music-embed` reserves the matching space while loading (content.css). */
+const EMBED_LIST_HEIGHT = 720;
+
 let APlayer: APlayerCtor | undefined;
 let globalPlayer: APlayerInstance | undefined;
 let pagePlayers: APlayerInstance[] = [];
@@ -51,6 +55,9 @@ async function initGlobal() {
       loadAPlayer(),
       fetchList(el.dataset.api!, el.dataset.server!, el.dataset.type!, el.dataset.id!),
     ]);
+    // APlayer builds the player full width and then collapses it; without this
+    // the collapse plays as a 0.3s animation on every first load.
+    el.classList.add('ap-init');
     globalPlayer = new Ctor({
       container: el,
       fixed: true,
@@ -74,6 +81,7 @@ async function initGlobal() {
     el.querySelector<HTMLButtonElement>('.aplayer-icon-lrc')!.click();
     exclusive(globalPlayer);
     el.dataset.state = 'ready';
+    requestAnimationFrame(() => requestAnimationFrame(() => el.classList.remove('ap-init')));
   } catch {
     el.dataset.state = '';
   }
@@ -91,10 +99,12 @@ async function initEmbeds() {
         // each embed carries the API itself, so it works without the floating player
         const audio = await fetchList(el.dataset.api!, el.dataset.server!, el.dataset.type!, el.dataset.id!);
         el.textContent = '';
-        const p = new Ctor({ container: el, theme: 'var(--theme-color)', preload: 'none', listMaxHeight: '720px', lrcType: 3, audio });
+        delete el.dataset.failed;
+        const p = new Ctor({ container: el, theme: 'var(--theme-color)', preload: 'none', listMaxHeight: `${EMBED_LIST_HEIGHT}px`, lrcType: 3, audio });
         exclusive(p);
         pagePlayers.push(p);
       } catch {
+        el.dataset.failed = '';
         el.innerHTML = '歌单加载失败，<button type="button" class="hl-label">重试</button>';
         el.querySelector('button')?.addEventListener('click', () => initEmbeds(), { once: true });
       }

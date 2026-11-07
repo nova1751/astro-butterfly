@@ -46,8 +46,23 @@ const { path } = Astro.props;
     color: var(--muted);
   }
   /* Twikoo theming to match the card look */
-  #twikoo :global(.tk-submit) {
+  /* Only the main form sits right under the headline; reply forms opened
+     inside a comment keep Twikoo's 1rem gap from the comment above. */
+  #twikoo :global(.tk-comments > .tk-submit) {
     margin-top: 0;
+  }
+  /* Twikoo breaks words anywhere (break-all); wrap English at spaces and only
+     split a word that is longer than the line (URLs, long hashes). */
+  #twikoo :global(.tk-comment) {
+    word-break: normal;
+    overflow-wrap: anywhere;
+  }
+  /* On phones a reply form nested in a reply loses two avatar columns;
+     drop its own avatar so the inputs keep a usable width. */
+  @media (max-width: 600px) {
+    #twikoo :global(.tk-comment .tk-submit .tk-avatar) {
+      display: none;
+    }
   }
   #twikoo :global(.el-button--primary) {
     border-color: var(--theme-color);
