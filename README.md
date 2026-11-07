@@ -45,12 +45,12 @@ A blog theme for [Astro](https://astro.build) with the look of [hexo-theme-butte
 You need Node.js 22.12 or later and [pnpm](https://pnpm.io/).
 
 ```bash
-# use this repository as a template on GitHub, or:
-git clone https://github.com/<you>/astro-butterfly.git my-blog
+pnpm create astro@latest my-blog --template nova1751/astro-butterfly
 cd my-blog
-pnpm install
 pnpm dev            # http://localhost:4321
 ```
+
+Or click **Use this template** on GitHub to get a copy that already deploys to GitHub Pages.
 
 Then:
 

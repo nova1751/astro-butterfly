@@ -58,6 +58,15 @@ import { music } from '@/config';
   :root .aplayer .aplayer-info .aplayer-controller .aplayer-bar-wrap .aplayer-bar .aplayer-played .aplayer-thumb { background: var(--theme-color) !important; }
   :root .aplayer .aplayer-info .aplayer-controller .aplayer-bar-wrap { min-width: 0; }
   :root .aplayer .aplayer-info .aplayer-controller .aplayer-time { flex: none; }
+  /* Time + five icons need ~160px; in narrow players the progress bar would
+     collapse to nothing. Drop the rarely used volume / order / loop buttons
+     (phones use hardware volume) so the bar keeps a usable width. */
+  :root .aplayer .aplayer-info { container-type: inline-size; }
+  @container (max-width: 240px) {
+    :root .aplayer .aplayer-info .aplayer-controller .aplayer-volume-wrap,
+    :root .aplayer .aplayer-info .aplayer-controller .aplayer-icon-order,
+    :root .aplayer .aplayer-info .aplayer-controller .aplayer-icon-loop { display: none; }
+  }
 
   :root .aplayer .aplayer-lrc { background: transparent; text-shadow: none; }
   :root .aplayer .aplayer-lrc::before,

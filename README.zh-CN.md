@@ -45,12 +45,12 @@
 需要 Node.js 22.12 或更高版本，以及 [pnpm](https://pnpm.io/)。
 
 ```bash
-# 在 GitHub 上点 "Use this template"，或者：
-git clone https://github.com/<you>/astro-butterfly.git my-blog
+pnpm create astro@latest my-blog --template nova1751/astro-butterfly
 cd my-blog
-pnpm install
 pnpm dev            # http://localhost:4321
 ```
+
+也可以在 GitHub 上点 **Use this template**，直接得到一个能部署到 GitHub Pages 的副本。
 
 接下来：
 

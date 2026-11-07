@@ -51,6 +51,7 @@ const ogImage = new URL(url(image), Astro.site).href;
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="generator" content={Astro.generator} />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
     <meta name="keywords" content={site.keywords.join(',')} />
