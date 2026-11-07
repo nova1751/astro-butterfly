@@ -1,4 +1,5 @@
 ---
+import { url } from '@/lib/url';
 import type { GetStaticPaths } from 'astro';
 import { getCollection, render } from 'astro:content';
 import 'katex/dist/katex.min.css';
@@ -26,7 +27,7 @@ const title = titles[type ?? ''] ?? page.data.title;
     {
       type === 'about' && isEmpty && (
         <div class="about-card">
-          <img src={site.avatar} alt={site.author} width="120" height="120" />
+          <img src={url(site.avatar)} alt={site.author} width="120" height="120" />
           <h1>{site.author}</h1>
           <p>{site.subtitle}</p>
           <a class="btn" href={aside.followMe.href} target="_blank" rel="noopener">GitHub</a>
@@ -40,7 +41,7 @@ const title = titles[type ?? ''] ?? page.data.title;
       <Content />
     </div>
 
-    {page.data.comments && <Comments path={`/${page.id}/`} />}
+    {page.data.comments && <Comments path={url(`/${page.id}/`)} />}
   </div>
 </Layout>
 

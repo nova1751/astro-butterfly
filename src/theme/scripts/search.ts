@@ -24,9 +24,10 @@ let shown = 0;
 /** Cache the whole initialisation, so a fast typist never searches a half-initialised index. */
 function loadPagefind() {
   pagefind ??= (async () => {
-    const url = '/pagefind/pagefind.js';
+    const url = `${import.meta.env.BASE_URL.replace(/\/?$/, '/')}pagefind/pagefind.js`;
     const pf = (await import(/* @vite-ignore */ url)) as Pagefind;
-    await pf.options({ excerptLength: 40 });
+    // result URLs come back relative to the site root; give them the base too
+    await pf.options({ excerptLength: 40, baseUrl: import.meta.env.BASE_URL });
     await pf.init();
     return pf;
   })().catch((e) => {

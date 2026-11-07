@@ -8,8 +8,13 @@
  */
 
 export const site = {
-  /** Production URL, no trailing slash. Used for canonical links, feed, sitemap. */
+  /** Production origin, no trailing slash. Used for canonical links, feed, sitemap. */
   url: 'https://example.com',
+  /**
+   * Sub-path the site is served from: '/' for a domain of its own, '/repo' for
+   * GitHub project pages (https://user.github.io/repo/).
+   */
+  base: '/',
   title: 'Astro Butterfly',
   subtitle: '一个 Butterfly 风格的 Astro 博客主题',
   description: 'A Butterfly-style blog theme for Astro: fast, accessible, no build-time surprises.',

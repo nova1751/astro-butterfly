@@ -20,6 +20,7 @@
 | 字段 | 说明 |
 | --- | --- |
 | `url` | 正式域名，不带末尾斜杠。订阅、sitemap、canonical 链接都会用到它，**部署前必须改** |
+| `base` | 站点所在的子路径。独立域名填 `'/'`；GitHub 项目页（`https://用户名.github.io/仓库名/`）填 `'/仓库名'`。用自带的 Pages 工作流部署时，这一项会自动设置 |
 | `title` / `subtitle` / `description` | 站点标题、副标题、描述（用于搜索引擎与社交分享） |
 | `keywords` | `<meta name="keywords">` |
 | `author` / `email` | 作者名显示在作者卡片、版权信息和订阅中 |

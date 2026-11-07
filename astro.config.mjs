@@ -13,7 +13,9 @@ import rehypeContent from './src/plugins/rehype-content.ts';
 import { site } from './src/config.ts';
 
 export default defineConfig({
-  site: site.url,
+  // SITE_URL / BASE_PATH let CI build a preview for another host (see .github/workflows/pages.yml)
+  site: process.env.SITE_URL || site.url,
+  base: process.env.BASE_PATH || site.base,
   trailingSlash: 'always',
   build: { format: 'directory' },
   prefetch: { prefetchAll: true, defaultStrategy: 'hover' },
@@ -26,7 +28,7 @@ export default defineConfig({
     processor: unified({
       smartypants: false,
       remarkPlugins: [remarkMath, remarkDirective, remarkDirectives, remarkAlerts, remarkReading],
-      rehypePlugins: [[rehypeKatex, { strict: false, throwOnError: false }], rehypeContent],
+      rehypePlugins: [[rehypeKatex, { strict: false, throwOnError: false }], [rehypeContent, { base: process.env.BASE_PATH || site.base }]],
     }),
   },
 });

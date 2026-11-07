@@ -1,4 +1,5 @@
 ---
+import { url } from '@/lib/url';
 import { Icon } from 'astro-icon/components';
 import { site, copyright } from '@/config';
 import { postUrl, tagUrl, coverOf, getNeighbours, getRelated, type Post } from '@/lib/posts';
@@ -8,28 +9,28 @@ interface Props {
   post: Post;
 }
 const { post } = Astro.props;
-const url = new URL(postUrl(post), Astro.site).href;
+const permalink = new URL(postUrl(post), Astro.site).href;
 const { newer, older } = await getNeighbours(post);
 const related = await getRelated(post);
 
 const enc = encodeURIComponent;
 const shares = [
-  { name: '微博', icon: 'fa6-brands:weibo', color: '#ff763b', href: `https://service.weibo.com/share/share.php?url=${enc(url)}&title=${enc(post.data.title)}` },
-  { name: 'QQ', icon: 'fa6-brands:qq', color: '#56b6e7', href: `https://connect.qq.com/widget/shareqq/index.html?url=${enc(url)}&title=${enc(post.data.title)}` },
-  { name: 'X', icon: 'fa6-brands:x-twitter', color: '#000', href: `https://x.com/intent/post?url=${enc(url)}&text=${enc(post.data.title)}` },
-  { name: 'Facebook', icon: 'fa6-brands:facebook', color: '#44619d', href: `https://www.facebook.com/sharer/sharer.php?u=${enc(url)}` },
+  { name: '微博', icon: 'fa6-brands:weibo', color: '#ff763b', href: `https://service.weibo.com/share/share.php?url=${enc(permalink)}&title=${enc(post.data.title)}` },
+  { name: 'QQ', icon: 'fa6-brands:qq', color: '#56b6e7', href: `https://connect.qq.com/widget/shareqq/index.html?url=${enc(permalink)}&title=${enc(post.data.title)}` },
+  { name: 'X', icon: 'fa6-brands:x-twitter', color: '#000', href: `https://x.com/intent/post?url=${enc(permalink)}&text=${enc(post.data.title)}` },
+  { name: 'Facebook', icon: 'fa6-brands:facebook', color: '#44619d', href: `https://www.facebook.com/sharer/sharer.php?u=${enc(permalink)}` },
 ];
 ---
 
 <div class="post-copyright">
   <dl>
-    <div><dt>文章作者:</dt><dd><a href={site.url}>{site.author}</a></dd></div>
-    <div><dt>文章链接:</dt><dd><a href={url}>{decodeURI(url)}</a></dd></div>
+    <div><dt>文章作者:</dt><dd><a href={url('/')}>{site.author}</a></dd></div>
+    <div><dt>文章链接:</dt><dd><a href={permalink}>{decodeURI(permalink)}</a></dd></div>
     <div>
       <dt>版权声明:</dt>
       <dd>
         本博客所有文章除特别声明外，均采用 <a href={copyright.licenseUrl} target="_blank" rel="noopener">{copyright.license}</a> 许可协议。转载请注明来自
-        <a href={site.url}>{site.title}</a>！
+        <a href={url('/')}>{site.title}</a>！
       </dd>
     </div>
   </dl>
@@ -39,7 +40,7 @@ const shares = [
   <div class="post-meta__tag-list">
     {post.data.tags.map((t) => <a class="post-meta__tags" href={tagUrl(t)}>{t}</a>)}
   </div>
-  <div class="post-share" data-share data-url={url} data-title={post.data.title}>
+  <div class="post-share" data-share data-url={permalink} data-title={post.data.title}>
     {
       shares.map((s) => (
         <a class="share-btn" href={s.href} target="_blank" rel="noopener nofollow" title={`分享到 ${s.name}`} aria-label={`分享到 ${s.name}`} style={`--c:${s.color}`}>

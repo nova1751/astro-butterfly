@@ -4,7 +4,7 @@
 
 一个外观与 [hexo-theme-butterfly](https://github.com/jerryc127/hexo-theme-butterfly) 一致的 [Astro](https://astro.build) 博客主题。生成纯静态 HTML，每个页面只加载用得到的脚本，并附带从 Hexo Butterfly 博客迁移过来的工具。
 
-[English](./README.md) · [配置](./docs/configuration.md) · [写作语法](./docs/writing.md) · [从 Hexo 迁移](./docs/migrate-from-hexo.md)
+**[在线演示](https://nova1751.github.io/astro-butterfly/)** · [English](./README.md) · [配置](./docs/configuration.md) · [写作语法](./docs/writing.md) · [从 Hexo 迁移](./docs/migrate-from-hexo.md)
 
 ![Astro 7](https://img.shields.io/badge/Astro-7-ff5d01?logo=astro&logoColor=white)
 ![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue)
@@ -125,10 +125,10 @@ cover: /img/covers/1.svg
 | 平台 | 设置 |
 | --- | --- |
 | Vercel / Netlify / Cloudflare Pages | 导入仓库；构建命令 `pnpm build`，输出目录 `dist` |
-| GitHub Pages | 使用官方的 [Astro Action](https://docs.astro.build/zh-cn/guides/deploy/github/)，或把 `dist/` 推到 Pages 分支 |
+| GitHub Pages | 已经配置好了：在仓库 Settings → Pages 里把 Source 设为 **GitHub Actions**。之后每次推送到 `main` 都会运行 `.github/workflows/pages.yml`，它会自动识别站点地址和子路径（`https://<你>.github.io/<仓库>/`） |
 | 自己的服务器 | 运行 `pnpm build` 后托管 `dist/`；访问不存在的路径时返回 `404.html` |
 
-部署前先把 `src/config.ts` 里的 `site.url` 改成你的真实域名，订阅、sitemap 和 canonical 链接都会用到它。
+部署前先把 `src/config.ts` 里的 `site.url` 改成你的真实域名，订阅、sitemap 和 canonical 链接都会用到它。如果要在其他平台上部署到子路径，设置 `site.base`（比如 `'/blog'`）。主题里的所有链接、搜索索引、订阅，以及 Markdown 里以 `/` 开头的链接和图片，都会自动加上这个前缀。
 
 ## 从 Hexo Butterfly 迁移
 

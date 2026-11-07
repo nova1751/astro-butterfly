@@ -1,4 +1,5 @@
 ---
+import { url } from '@/lib/url';
 import { envelope, site } from '@/config';
 ---
 
@@ -11,21 +12,21 @@ import { envelope, site } from '@/config';
 -->
 <div class="envelope" tabindex="0" aria-label={`来自${site.author}的留言`}>
   <div class="envelope-window">
-    <img class="envelope-back" src={envelope.before} alt="" width="530" height="316" loading="lazy" decoding="async" />
+    <img class="envelope-back" src={url(envelope.before)} alt="" width="530" height="316" loading="lazy" decoding="async" />
     <div class="envelope-inner">
       <div class="letter">
-        <img class="letter-cover" src={envelope.cover} alt="" width="960" height="590" loading="lazy" decoding="async" />
+        <img class="letter-cover" src={url(envelope.cover)} alt="" width="960" height="590" loading="lazy" decoding="async" />
         <div class="letter-body">
           <p class="letter-title">来自{site.author}的留言:</p>
           <div class="letter-message">
             {envelope.message.map((m) => <p>{m}</p>)}
           </div>
-          <img class="letter-line" src={envelope.line} alt="" width="1920" height="95" loading="lazy" decoding="async" />
+          <img class="letter-line" src={url(envelope.line)} alt="" width="1920" height="95" loading="lazy" decoding="async" />
           <p class="letter-bottom">{envelope.bottom}</p>
         </div>
       </div>
     </div>
-    <img class="envelope-front" src={envelope.after} alt="" width="530" height="260" loading="lazy" decoding="async" />
+    <img class="envelope-front" src={url(envelope.after)} alt="" width="530" height="260" loading="lazy" decoding="async" />
   </div>
 </div>
 

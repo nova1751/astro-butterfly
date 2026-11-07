@@ -1,4 +1,5 @@
 ---
+import { url } from '@/lib/url';
 import { Icon } from 'astro-icon/components';
 import { site, nav } from '@/config';
 import { getPosts, getTags, getCategories } from '@/lib/posts';
@@ -10,7 +11,8 @@ interface Props {
 }
 const { kind, topImg, title } = Astro.props;
 const path = Astro.url.pathname;
-const isActive = (href?: string) => !!href && (href === '/' ? path === '/' || path.startsWith('/page/') : path.startsWith(href));
+const local = url('/') === '/' ? path : '/' + path.slice(url('/').length); // path without the base
+const isActive = (href?: string) => !!href && (href === '/' ? local === '/' || local.startsWith('/page/') : local.startsWith(href));
 
 const [posts, tags, cats] = await Promise.all([getPosts(), getTags(), getCategories()]);
 ---
@@ -18,11 +20,11 @@ const [posts, tags, cats] = await Promise.all([getPosts(), getTags(), getCategor
 <header
   id="page-header"
   class:list={[kind === 'home' ? 'not-top-img' : 'has-top-img', kind === 'post' && 'post-bg']}
-  style={kind !== 'home' ? `--top-img: url('${topImg}')` : undefined}
+  style={kind !== 'home' ? `--top-img: url('${url(topImg)}')` : undefined}
 >
   <nav id="nav" aria-label="主导航">
-    <a id="blog-info" href="/" aria-label={`${site.title} 首页`}>
-      <img class="site-icon" src={site.logo} alt="" width="36" height="36" />
+    <a id="blog-info" href={url('/')} aria-label={`${site.title} 首页`}>
+      <img class="site-icon" src={url(site.logo)} alt="" width="36" height="36" />
       <span class="site-name">{site.title}</span>
     </a>
     <div class="menus">
@@ -42,7 +44,7 @@ const [posts, tags, cats] = await Promise.all([getPosts(), getTags(), getCategor
                 <ul class="menu-child">
                   {item.children.map((c) => (
                     <li>
-                      <a href={c.href} aria-current={isActive(c.href) ? 'page' : undefined}>
+                      <a href={url(c.href!)} aria-current={isActive(c.href) ? 'page' : undefined}>
                         <Icon name={c.icon} />
                         <span>{c.label}</span>
                       </a>
@@ -52,7 +54,7 @@ const [posts, tags, cats] = await Promise.all([getPosts(), getTags(), getCategor
               </li>
             ) : (
               <li class="menu-item">
-                <a class="menu-link" href={item.href} aria-current={isActive(item.href) ? 'page' : undefined}>
+                <a class="menu-link" href={item.href && url(item.href)} aria-current={isActive(item.href) ? 'page' : undefined}>
                   <Icon name={item.icon} />
                   <span>{item.label}</span>
                 </a>
@@ -87,18 +89,18 @@ const [posts, tags, cats] = await Promise.all([getPosts(), getTags(), getCategor
 <div id="sidebar" class="sidebar" hidden>
   <div class="sidebar-mask" data-sidebar-close></div>
   <div class="sidebar-menus" role="dialog" aria-modal="true" aria-label="菜单">
-    <div class="avatar-img"><img src={site.avatar} alt={site.author} width="110" height="110" loading="lazy" /></div>
+    <div class="avatar-img"><img src={url(site.avatar)} alt={site.author} width="110" height="110" loading="lazy" /></div>
     <div class="sidebar-site-data">
-      <a href="/archives/"><span class="headline">文章</span><span class="length-num">{posts.length}</span></a>
-      <a href="/tags/"><span class="headline">标签</span><span class="length-num">{tags.length}</span></a>
-      <a href="/categories/"><span class="headline">分类</span><span class="length-num">{cats.length}</span></a>
+      <a href={url('/archives/')}><span class="headline">文章</span><span class="length-num">{posts.length}</span></a>
+      <a href={url('/tags/')}><span class="headline">标签</span><span class="length-num">{tags.length}</span></a>
+      <a href={url('/categories/')}><span class="headline">分类</span><span class="length-num">{cats.length}</span></a>
     </div>
     <hr />
     <ul class="sidebar-links">
       {
         nav.flatMap((item) => (item.children ? item.children : [item])).map((item) => (
           <li>
-            <a href={item.href} aria-current={isActive(item.href) ? 'page' : undefined}>
+            <a href={item.href && url(item.href)} aria-current={isActive(item.href) ? 'page' : undefined}>
               <Icon name={item.icon} />
               <span>{item.label}</span>
             </a>

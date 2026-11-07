@@ -1,4 +1,5 @@
 ---
+import { url } from '@/lib/url';
 import Layout from '../Layout.astro';
 import PostCard from '../components/PostCard.astro';
 import Pagination from '../components/Pagination.astro';
@@ -15,5 +16,5 @@ const { page } = Astro.props;
   <div id="recent-posts">
     {page.items.map((post, i) => <PostCard post={post} reverse={i % 2 === 1} eager={page.page === 1 && i < 2} />)}
   </div>
-  <Pagination base="/" current={page.page} total={page.total} />
+  <Pagination base={url('/')} current={page.page} total={page.total} />
 </Layout>

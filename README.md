@@ -4,7 +4,7 @@
 
 A blog theme for [Astro](https://astro.build) with the look of [hexo-theme-butterfly](https://github.com/jerryc127/hexo-theme-butterfly). It builds to plain static HTML, keeps JavaScript to what each page needs, and includes tooling for moving an existing Hexo Butterfly blog over.
 
-[简体中文](./README.zh-CN.md) · [Configuration](./docs/configuration.md) · [Writing](./docs/writing.md) · [Migrating from Hexo](./docs/migrate-from-hexo.md)
+**[Live demo](https://nova1751.github.io/astro-butterfly/)** · [简体中文](./README.zh-CN.md) · [Configuration](./docs/configuration.md) · [Writing](./docs/writing.md) · [Migrating from Hexo](./docs/migrate-from-hexo.md)
 
 ![Astro 7](https://img.shields.io/badge/Astro-7-ff5d01?logo=astro&logoColor=white)
 ![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue)
@@ -125,10 +125,10 @@ The output is a static `dist/` folder, so any static host works.
 | Host | Settings |
 | --- | --- |
 | Vercel / Netlify / Cloudflare Pages | Import the repository. Build command `pnpm build`, output directory `dist`. |
-| GitHub Pages | Use the official [Astro action](https://docs.astro.build/en/guides/deploy/github/), or push `dist/` to a Pages branch. |
+| GitHub Pages | Already set up: in Settings → Pages, set Source to **GitHub Actions**. Every push to `main` then runs `.github/workflows/pages.yml`, which works out the URL and sub-path (`https://<you>.github.io/<repo>/`) by itself. |
 | Your own server | Run `pnpm build` and serve `dist/`. Send `404.html` for unknown paths. |
 
-Set `site.url` in `src/config.ts` to your real domain first. The feed, sitemap and canonical links all use it.
+Set `site.url` in `src/config.ts` to your real domain first. The feed, sitemap and canonical links all use it. To serve the site from a sub-path on another host, set `site.base` (for example `'/blog'`). Every theme link, the search index, the feed and root-relative links in your Markdown follow it.
 
 ## Migrating from Hexo Butterfly
 

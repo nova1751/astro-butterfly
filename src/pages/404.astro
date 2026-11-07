@@ -1,15 +1,16 @@
 ---
+import { url } from '@/lib/url';
 import Layout from '@/theme/Layout.astro';
 import { site } from '@/config';
 ---
 
 <Layout title="404" header="page" aside={false} noindex>
   <div class="card error404">
-    <img src={site.error404Img} alt="" width="460" height="300" />
+    <img src={url(site.error404Img)} alt="" width="460" height="300" />
     <div class="error-info">
       <h1 class="error_title">404</h1>
       <p class="error_subtitle">Page Not Found</p>
-      <a class="btn" href="/">回到主页</a>
+      <a class="btn" href={url('/')}>回到主页</a>
     </div>
   </div>
 </Layout>

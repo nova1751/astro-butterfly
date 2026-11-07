@@ -26,7 +26,7 @@ It includes designs, styles and assets adapted from the following projects:
   Copyright JongChan Choi. MIT License.
   Typing-spark behaviour, reimplemented in src/theme/scripts/power-mode.ts.
 
-Font: public/fonts/unidream-led.woff2 is a digits-only subset of "UnidreamLED",
+Font: src/assets/fonts/unidream-led.woff2 is a digits-only subset of "UnidreamLED",
 the LED face used by hexo-butterfly-clock. Its upstream licence could not be
 confirmed; replace it with a font you have rights to (scripts/build-led-font.py
 builds the subset from any TTF) if that matters for your use.

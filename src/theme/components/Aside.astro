@@ -1,4 +1,5 @@
 ---
+import { url } from '@/lib/url';
 import { Icon } from 'astro-icon/components';
 import { site, social, aside, comments, clock, features } from '@/config';
 import ClockWidget from './ClockWidget.astro';
@@ -44,14 +45,14 @@ const buildDate = formatDate(new Date());
 <aside id="aside-content" aria-label="侧栏">
   <section class="card card-widget card-info">
     <div class="avatar-img">
-      <img src={site.avatar} alt={site.author} width="110" height="110" />
+      <img src={url(site.avatar)} alt={site.author} width="110" height="110" />
     </div>
     <div class="author-info__name">{site.author}</div>
     <div class="author-info__description">{site.description}</div>
     <div class="card-info-data">
-      <a href="/archives/"><span class="headline">文章</span><span class="length-num">{posts.length}</span></a>
-      <a href="/tags/"><span class="headline">标签</span><span class="length-num">{tags.length}</span></a>
-      <a href="/categories/"><span class="headline">分类</span><span class="length-num">{cats.length}</span></a>
+      <a href={url('/archives/')}><span class="headline">文章</span><span class="length-num">{posts.length}</span></a>
+      <a href={url('/tags/')}><span class="headline">标签</span><span class="length-num">{tags.length}</span></a>
+      <a href={url('/categories/')}><span class="headline">分类</span><span class="length-num">{cats.length}</span></a>
     </div>
     <a class="btn follow-btn" href={aside.followMe.href} target="_blank" rel="noopener">
       <Icon name={aside.followMe.icon} />
@@ -60,7 +61,7 @@ const buildDate = formatDate(new Date());
     <div class="card-info-social-icons">
       {
         social.map((s) => (
-          <a class="social-icon" href={s.href} title={s.label} aria-label={s.label} target={s.href.startsWith('http') ? '_blank' : undefined} rel="noopener" style={`--c:${s.color}`}>
+          <a class="social-icon" href={url(s.href)} title={s.label} aria-label={s.label} target={s.href.startsWith('http') ? '_blank' : undefined} rel="noopener" style={`--c:${s.color}`}>
             <Icon name={s.icon} />
           </a>
         ))
@@ -118,7 +119,7 @@ const buildDate = formatDate(new Date());
                 </li>
               ))}
             </ul>
-            {cats.length > aside.categories && <a class="card-more" href="/categories/">查看更多</a>}
+            {cats.length > aside.categories && <a class="card-more" href={url('/categories/')}>查看更多</a>}
           </section>
 
           <section class="card card-widget card-tags">
@@ -137,14 +138,14 @@ const buildDate = formatDate(new Date());
             <ul class="card-list">
               {months.map((m) => (
                 <li>
-                  <a href={`/archives/${m.year}/${m.month}/`}>
+                  <a href={url(`/archives/${m.year}/${m.month}/`)}>
                     <span class="card-list-name">{`${MONTH_NAMES[Number(m.month) - 1]} ${m.year}`}</span>
                     <span class="card-list-count">{m.posts.length}</span>
                   </a>
                 </li>
               ))}
             </ul>
-            <a class="card-more" href="/archives/">查看更多</a>
+            <a class="card-more" href={url('/archives/')}>查看更多</a>
           </section>
 
           <section class="card card-widget card-webinfo">

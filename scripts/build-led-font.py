@@ -1,5 +1,5 @@
 """
-Build public/fonts/unidream-led.woff2 for the aside clock.
+Build src/assets/fonts/unidream-led.woff2 for the aside clock.
 
   pip install fonttools brotli
   python scripts/build-led-font.py
@@ -19,7 +19,7 @@ from fontTools.ttLib import TTFont
 
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "scripts/assets/UnidreamLED.ttf"
-OUT = ROOT / "public/fonts/unidream-led.woff2"
+OUT = ROOT / "src/assets/fonts/unidream-led.woff2"
 TEXT = "0123456789:-./ %APMSUNMOTUEWEDTHUFRISAT"
 
 font = TTFont(SRC)

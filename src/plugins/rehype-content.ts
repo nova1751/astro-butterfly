@@ -14,12 +14,22 @@ const siteHost = new URL(site.url).host;
  *  - external links: new tab + nofollow (Hexo external_link + hexo-filter-nofollow)
  *  - standalone images with alt text become <figure> + <figcaption> (Butterfly
  *    photofigcaption, but at build time: no JS, no layout shift, works offline)
+ *  - root-relative links and images ("/posts/x/", "/img/a.png") get the site's
+ *    base path, so Markdown written for "/" also works under GitHub project pages
  */
-export default function rehypeContent() {
+export default function rehypeContent({ base = '/' }: { base?: string } = {}) {
+  const prefix = base.replace(/\/+$/, '');
+  const withBase = (v: unknown) => {
+    const s = String(v ?? '');
+    if (!prefix || !s.startsWith('/') || s.startsWith('//') || s === prefix || s.startsWith(`${prefix}/`)) return v;
+    return prefix + s;
+  };
   return (tree: Root) => {
     const slugger = new HexoSlugger();
 
     visit(tree, 'element', (node: Element, index, parent) => {
+      if (node.tagName === 'img' || node.tagName === 'source') node.properties.src = withBase(node.properties.src) as string;
+      if (node.tagName === 'a') node.properties.href = withBase(node.properties.href) as string;
       if (HEADING.test(node.tagName)) {
         const id = (node.properties.id as string | undefined) ?? slugger.slug(toString(node));
         node.properties.id = id;

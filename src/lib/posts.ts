@@ -2,6 +2,7 @@ import { getCollection, type CollectionEntry } from 'astro:content';
 import { slugize } from './slug';
 import { yearOf, monthOf } from './date';
 import { site } from '@/config';
+import { url } from './url';
 
 export type Post = CollectionEntry<'posts'>;
 
@@ -27,11 +28,11 @@ export async function getPosts(): Promise<Post[]> {
   return cache;
 }
 
-export const postUrl = (p: Post) => `/posts/${p.data.abbrlink}/`;
-export const tagUrl = (name: string) => `/tags/${tagAlias.get(slugize(name).toLowerCase()) ?? slugize(name)}/`;
-export const categoryUrl = (path: string[]) => `/categories/${path.map(slugize).join('/')}/`;
-export const coverOf = (p: Post) => p.data.cover || site.defaultCover;
-export const topImgOf = (p: Post) => p.data.top_img || p.data.cover || site.topImg;
+export const postUrl = (p: Post) => url(`/posts/${p.data.abbrlink}/`);
+export const tagUrl = (name: string) => url(`/tags/${tagAlias.get(slugize(name).toLowerCase()) ?? slugize(name)}/`);
+export const categoryUrl = (path: string[]) => url(`/categories/${path.map(slugize).join('/')}/`);
+export const coverOf = (p: Post) => url(p.data.cover || site.defaultCover);
+export const topImgOf = (p: Post) => url(p.data.top_img || p.data.cover || site.topImg);
 
 export type Term = { name: string; slug: string; url: string; posts: Post[] };
 
