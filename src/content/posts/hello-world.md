@@ -27,7 +27,7 @@ pnpm new "文章标题" 分类目录
 ---
 title: 文章标题            # 必填
 date: 2024-06-01 10:00:00  # 必填，按 site.timezone 解析
-updated: 2024-06-02 09:00  # 可选，默认等于 date
+updated: 2024-06-02 09:00  # 可选：更新时间会自动跟随 git 提交
 abbrlink: 1a2b3c4d         # 必填，文章 URL
 tags: [Astro, 前端]
 categories: [前端, 框架]    # 数组表示层级：前端 › 框架

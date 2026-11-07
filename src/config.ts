@@ -123,6 +123,19 @@ export const music = {
   api: 'https://api.injahow.cn/meting/?server=:server&type=:type&id=:id&r=:r',
 };
 
+/**
+ * A post's "updated" date is the later of its front matter `updated:` and the last
+ * git commit that touched it, so it never needs maintaining by hand. Commits that
+ * only reformat or migrate posts go in .git-blame-ignore-revs. Docs: docs/writing.md
+ */
+export const dates = {
+  /**
+   * Ignore git history before this ISO date. Leave empty for a blog that started
+   * here; set it to the move date when importing posts from Hexo or elsewhere.
+   */
+  gitSince: '',
+};
+
 /** Atom feed at /atom.xml (all posts, newest first). */
 export const feed = {
   /**

@@ -10,6 +10,7 @@
 - [comments：评论](#comments评论)
 - [clock：时钟与天气](#clock时钟与天气)
 - [music：音乐播放器](#music音乐播放器)
+- [dates：更新时间](#dates更新时间)
 - [features：可选特效](#features可选特效)
 - [其他](#其他)
 - [独立页面](#独立页面)
@@ -119,6 +120,14 @@ export const music = {
 - `server` 可选 `netease`、`tencent`、`kugou`、`xiami`、`baidu`；`type` 可选 `playlist`、`song`、`album`、`artist`。
 - 默认的 API 是免费的公共实例，稳定性没有保证。正式使用建议自己部署一个。
 - 播放器在站内跳转时不会中断播放。歌词默认隐藏，点歌词按钮显示。
+
+## dates：更新时间
+
+文章的"更新于"取 Front Matter 的 `updated` 和最后一次 git 提交中较晚的那个，规则详见 [写作语法 · 更新时间](./writing.md#更新时间)。
+
+| 字段 | 说明 |
+| --- | --- |
+| `gitSince` | 早于这个时间（ISO 格式，如 `'2026-01-01T00:00:00+08:00'`）的 git 提交不算作更新。博客从零开始时留空；从 Hexo 等平台搬过来时，填搬家那天 |
 
 ## features：可选特效
 

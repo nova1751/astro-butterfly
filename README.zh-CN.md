@@ -25,6 +25,7 @@
 - 站内全文搜索：使用 [Pagefind](https://pagefind.app/)，构建时生成索引，不依赖外部服务。
 - Atom 订阅、`sitemap.xml` / `sitemap.txt`、`robots.txt`、Web App Manifest、Open Graph 标签和 canonical 链接。
 - KaTeX 数学公式、图片灯箱、用 alt 文字生成的图片说明、字数与阅读时长统计、旧文章过期提醒。
+- 文章的"更新于"自动跟随 git 提交，不用手动维护；批量格式化之类的提交可以用 `.git-blame-ignore-revs` 排除。
 - 简繁切换；只在加载慢时才出现的顶部进度条；Butterfly 的打字冒光特效。
 
 **可选服务**，填入对应的 key 即可开启

@@ -18,6 +18,8 @@ const posts = defineCollection({
     .object({
       title: z.string(),
       date: hexoDate,
+      // Last update recorded by hand (optional). The effective date also follows
+      // git; see getPosts() in src/lib/posts.ts.
       updated: optionalHexoDate,
       abbrlink: z.union([z.string(), z.number()]).transform(String),
       tags: stringList,
@@ -31,7 +33,6 @@ const posts = defineCollection({
     })
     .transform(({ comment, ...d }) => ({
       ...d,
-      updated: d.updated ?? d.date,
       comments: d.comments ?? comment ?? true,
     })),
 });

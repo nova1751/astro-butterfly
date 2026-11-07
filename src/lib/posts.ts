@@ -1,10 +1,12 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
 import { slugize } from './slug';
 import { yearOf, monthOf } from './date';
+import { resolveUpdated } from './git-dates';
 import { site } from '@/config';
 import { url } from './url';
 
-export type Post = CollectionEntry<'posts'>;
+type Entry = CollectionEntry<'posts'>;
+export type Post = Entry & { data: Entry['data'] & { updated: Date } };
 
 let cache: Post[] | undefined;
 /** lower-cased tag slug -> canonical spelling (first seen, newest post first) */
@@ -14,7 +16,11 @@ const tagAlias = new Map<string, string>();
 export async function getPosts(): Promise<Post[]> {
   if (cache) return cache;
   const all = await getCollection('posts', ({ data }) => import.meta.env.DEV || !data.draft);
-  cache = all.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+  // Resolved here, not in the schema: Astro caches parsed entries by file
+  // content, so a git-derived value there would go stale after a commit.
+  cache = all
+    .map((p) => ({ ...p, data: { ...p.data, updated: resolveUpdated(p.filePath, p.data.updated, p.data.date) } }))
+    .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
   const seen = new Map<string, string>();
   for (const p of cache) {
     const prev = seen.get(p.data.abbrlink);

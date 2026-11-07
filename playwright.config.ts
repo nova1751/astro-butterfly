@@ -18,7 +18,7 @@ export default defineConfig({
     { name: 'mobile', use: { ...devices['Pixel 7'] }, grep: /@mobile/ },
   ],
   webServer: {
-    command: 'pnpm preview --port 4330 --host 127.0.0.1',
+    command: 'pnpm preview --port 4330 --host 127.0.0.1 --force',
     url: 'http://127.0.0.1:4330/',
     reuseExistingServer: !process.env.CI,
   },

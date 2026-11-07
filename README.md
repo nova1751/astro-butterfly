@@ -25,6 +25,7 @@ A blog theme for [Astro](https://astro.build) with the look of [hexo-theme-butte
 - Full-text site search through [Pagefind](https://pagefind.app/), indexed at build time with no external service.
 - Atom feed, `sitemap.xml` and `sitemap.txt`, `robots.txt`, a web app manifest, Open Graph tags and canonical URLs.
 - KaTeX maths, image lightbox, image captions taken from alt text, reading time and word count, and a notice on outdated posts.
+- "Last updated" dates follow git, so you never edit them by hand. Bulk reformatting commits can be excluded through `.git-blame-ignore-revs`.
 - A Simplified ⇄ Traditional Chinese switch, a top progress bar that appears only on slow loads, and Butterfly's typing sparks.
 
 **Optional services**, each switched on by filling in a key

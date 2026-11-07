@@ -25,7 +25,7 @@
 ---
 title: 文章标题              # 必填
 date: 2024-06-01 10:00:00    # 必填；按 site.timezone 解析
-updated: 2024-06-02 09:00    # 可选；缺省等于 date
+updated: 2024-06-02 09:00    # 可选；一般不用写，见下文“更新时间”
 abbrlink: 1a2b3c4d           # 必填；文章地址 /posts/1a2b3c4d/
 tags: [Astro, 前端]          # 一个时可以只写字符串
 categories: [前端, 框架]      # 数组表示层级：前端 › 框架
@@ -40,6 +40,21 @@ draft: true                  # 草稿：只在 pnpm dev 里出现
 - 日期支持 Hexo 的各种写法，比如 `2023-1-9 14:18:56`。
 - `pnpm new "标题" 目录` 会生成一个不重复的 8 位 `abbrlink`。
 - `abbrlink` 一旦发布就不要再改，否则旧链接会失效。
+
+### 更新时间
+
+文章的"更新于"不用手动维护。构建时取下面两者中**较晚**的那个；两者都没有时，就用 `date`：
+
+- **git**：最后一次改动这篇文章的提交时间（取作者时间，变基后也不会变）。还没提交的改动，用文件的修改时间。
+- **Front Matter 的 `updated:`**：可以手动写一个更晚的时间，但不能用它把时间往前改。
+
+两条规则可以避免 git 历史里的噪音刷新更新时间：
+
+- 只改格式、批量迁移语法这类**不改内容**的提交，把完整的 SHA 写进仓库根目录的 `.git-blame-ignore-revs`，它们就不会被算作更新。GitHub 的 blame 视图也会自动跳过这些提交；本地运行一次 `git config blame.ignoreRevsFile .git-blame-ignore-revs`，`git blame` 也会跳过。
+- `src/config.ts` 里的 `dates.gitSince` 可以让更早的 git 历史全部不算数。这一项适合从别处搬过来的博客：搬家之前的历史只是复制和改名，以 Front Matter 为准。
+
+> [!IMPORTANT]
+> 这依赖完整的 git 历史。自带的 CI 和 Pages 工作流已经设置了 `fetch-depth: 0`。在其他平台构建时，如果平台是浅克隆，日期会退回到最近一次提交的时间，可以把构建命令改成 `git fetch --unshallow; pnpm build`。
 
 ## 基础 Markdown
 

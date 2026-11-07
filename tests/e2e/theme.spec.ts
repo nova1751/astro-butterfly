@@ -67,7 +67,8 @@ test('long code blocks clamp and expand', async ({ page }) => {
 test('dark mode toggles and is remembered', async ({ page }) => {
   await page.goto('/');
   const start = await page.locator('html').getAttribute('data-theme');
-  await page.mouse.wheel(0, 400);
+  await page.evaluate(() => window.scrollTo(0, 400));
+  await expect(page.locator('html')).toHaveClass(/show-rightside/); // the buttons slide in after scrolling
   await page.locator('[data-rightside-config]').click();
   await page.locator('[data-darkmode]').click();
   const next = start === 'dark' ? 'light' : 'dark';
