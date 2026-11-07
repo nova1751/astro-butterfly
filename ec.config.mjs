@@ -45,6 +45,7 @@ export default defineEcConfig({
     codePaddingInline: 'var(--code-padding-inline, 16px)',
     uiFontFamily: 'inherit',
     gutterBorderWidth: '0px',
+    gutterForeground: '#9aa4b2',
     frames: {
       shadowColor: 'transparent',
       frameBoxShadowCssValue: 'none',

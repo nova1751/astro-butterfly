@@ -4,6 +4,7 @@ import { Icon } from 'astro-icon/components';
 import { site, social, aside, comments, clock, features } from '@/config';
 import ClockWidget from './ClockWidget.astro';
 import { getPosts, getTags, getCategories, postUrl, coverOf, groupByMonth } from '@/lib/posts';
+import { optimize, imagePresets } from '@/lib/images';
 import { formatDate } from '@/lib/date';
 import { countWords, formatCount } from '@/lib/wordcount';
 
@@ -15,6 +16,11 @@ const sticky = Astro.slots.has('sticky') ? (await Astro.slots.render('sticky')).
 const hasSticky = sticky !== '';
 
 const recent = [...posts].sort((a, b) => b.data.updated.getTime() - a.data.updated.getTime()).slice(0, aside.recentPosts);
+
+const [avatar, ...thumbs] = await Promise.all([
+  optimize(url(site.avatar), imagePresets.avatar),
+  ...recent.map((p) => optimize(url(coverOf(p)), imagePresets.thumb)),
+]);
 
 // top-level categories, most posts first
 const topCats = cats
@@ -45,7 +51,7 @@ const buildDate = formatDate(new Date());
 <aside id="aside-content" aria-label="侧栏">
   <section class="card card-widget card-info">
     <div class="avatar-img">
-      <img src={url(site.avatar)} alt={site.author} width="110" height="110" />
+      <img src={avatar.src} srcset={avatar.srcset} alt={site.author} width="110" height="110" />
     </div>
     <div class="author-info__name">{site.author}</div>
     <div class="author-info__description">{site.description}</div>
@@ -85,10 +91,10 @@ const buildDate = formatDate(new Date());
       <h2 class="item-headline"><Icon name="fa6-solid:clock-rotate-left" /><span>最新文章</span></h2>
       <ul class="aside-list">
         {
-          recent.map((p) => (
+          recent.map((p, i) => (
             <li class="aside-list-item">
               <a class="thumbnail" href={postUrl(p)} title={p.data.title} tabindex="-1" aria-hidden="true">
-                <img src={coverOf(p)} alt="" loading="lazy" decoding="async" width="64" height="64" />
+                <img src={thumbs[i].src} srcset={thumbs[i].srcset} alt="" loading="lazy" decoding="async" width="64" height="64" />
               </a>
               <div class="content">
                 <a class="title line-clamp-2" href={postUrl(p)} title={p.data.title}>{p.data.title}</a>

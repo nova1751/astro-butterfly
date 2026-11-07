@@ -1,3 +1,5 @@
+import photoswipeCss from 'photoswipe/style.css?url';
+import { loadStyle } from './load-style';
 import { toast } from './store';
 import { initCodeBlocks } from './code';
 
@@ -53,7 +55,7 @@ async function openLightbox(link: HTMLAnchorElement) {
   const index = Math.max(0, links.indexOf(link));
   const [{ default: PhotoSwipe }] = await Promise.all([
     import('photoswipe'),
-    import('photoswipe/style.css'),
+    loadStyle(photoswipeCss),
   ]);
   const dataSource = links.map((a) => {
     const img = a.querySelector('img');
@@ -106,6 +108,7 @@ export function bindCommentImages(scope: Element) {
     const a = document.createElement('a');
     a.href = img.src;
     a.dataset.pswp = '';
+    a.setAttribute('aria-label', img.alt || '查看评论图片');
     img.replaceWith(a);
     a.append(img);
   });

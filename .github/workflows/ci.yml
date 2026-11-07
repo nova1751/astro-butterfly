@@ -25,6 +25,16 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Cache fonts and optimized images
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules/.cache/lxgw
+            node_modules/.astro
+            public/fonts/lxgw
+          key: assets-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'scripts/build-font.mjs') }}-${{ github.sha }}
+          restore-keys: |
+            assets-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'scripts/build-font.mjs') }}-
       - name: Type check
         run: pnpm check
       - name: Unit tests

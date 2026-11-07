@@ -12,3 +12,7 @@ playwright-report/
 Thumbs.db
 *.log
 .env
+
+# generated webfont assets
+public/fonts/lxgw/
+src/theme/generated/

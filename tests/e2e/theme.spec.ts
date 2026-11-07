@@ -104,3 +104,27 @@ test('mobile layout has no horizontal scroll @mobile', async ({ page }) => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), path).toBe(true);
   }
 });
+
+test('fixed navigation stays above cards after scrolling down then up @mobile', async ({ page }) => {
+  for (const path of ['/', TAGS_POST]) {
+    await page.goto(path);
+    const headerHeight = await page.locator('#page-header').evaluate((el) => el.getBoundingClientRect().height);
+    for (const theme of ['light', 'dark']) {
+      await page.evaluate((value) => { document.documentElement.dataset.theme = value; }, theme);
+      await page.evaluate(() => window.scrollTo({ top: 1100, behavior: 'instant' }));
+      await expect(page.locator('html')).toHaveClass(/nav-fixed/);
+      await expect(page.locator('html')).not.toHaveClass(/nav-visible/);
+      await page.evaluate(() => window.scrollBy({ top: -300, behavior: 'instant' }));
+      await expect(page.locator('html')).toHaveClass(/nav-visible/);
+      expect(await page.locator('#page-header').evaluate((el) => el.getBoundingClientRect().height)).toBe(headerHeight);
+      // Hit-test the real painted layer, rather than comparing z-index numbers.
+      await expect.poll(() => page.locator('#nav').evaluate((nav) => {
+        const box = nav.getBoundingClientRect();
+        if (Math.abs(box.top) > 1) return false;
+        return [0.25, 0.5, 0.75].every((x) => nav.contains(
+          document.elementFromPoint(box.left + box.width * x, box.top + box.height / 2),
+        ));
+      })).toBe(true);
+    }
+  }
+});

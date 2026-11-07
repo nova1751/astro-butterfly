@@ -149,3 +149,11 @@ This theme adapts the design and assets of [hexo-theme-butterfly](https://github
 ## License
 
 [Apache-2.0](./LICENSE)
+
+### Build-time resource optimization
+
+The dev/check/build commands regenerate site-specific WenKai font subsets when content changes. Run `pnpm build:font` after adding new characters during development. Original font chunks cover characters typed into comments or search. Generated files are ignored by Git; CI caches fonts and processed images.
+
+Supported remote covers and Markdown images are optimized during the build, with original URLs retained when unavailable. The global player initializes on first open; player and lightbox styles load on demand.
+
+Resource optimization is optional: damaged font caches are regenerated, and font failures fall back to the original font. A failed build retries once without remote-image optimization; a failed retry still exits with an error. Use `BLOG_DISABLE_IMAGE_OPTIMIZATION=1 pnpm build` to opt out explicitly.

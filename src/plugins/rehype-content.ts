@@ -52,7 +52,7 @@ export default function rehypeContent({ base = '/' }: { base?: string } = {}) {
           parent.children[index] = {
             type: 'element',
             tagName: 'a',
-            properties: { href: node.properties.src as string, className: ['lightbox'], dataPswp: '' },
+            properties: { href: node.properties.src as string, className: ['lightbox'], dataPswp: '', ariaLabel: String(node.properties.alt || '查看原图') },
             children: [node],
           };
         }

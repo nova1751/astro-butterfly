@@ -6,6 +6,7 @@ import 'katex/dist/katex.min.css';
 import Layout from '@/theme/Layout.astro';
 import Comments from '@/theme/components/Comments.astro';
 import Envelope from '@/theme/components/Envelope.astro';
+import { optimize, imagePresets } from '@/lib/images';
 import { site, aside } from '@/config';
 
 export const getStaticPaths = (async () => {
@@ -15,6 +16,7 @@ export const getStaticPaths = (async () => {
 const { page } = Astro.props;
 const { Content } = await render(page);
 const type = page.data.type;
+const avatar = type === 'about' ? await optimize(url(site.avatar), imagePresets.avatar) : undefined;
 const isEmpty = !page.body?.trim();
 const titles: Record<string, string> = { about: '关于', link: '友情链接' };
 const title = titles[type ?? ''] ?? page.data.title;
@@ -27,7 +29,7 @@ const title = titles[type ?? ''] ?? page.data.title;
     {
       type === 'about' && isEmpty && (
         <div class="about-card">
-          <img src={url(site.avatar)} alt={site.author} width="120" height="120" />
+          <img src={avatar?.src} srcset={avatar?.srcset} alt={site.author} width="120" height="120" />
           <h1>{site.author}</h1>
           <p>{site.subtitle}</p>
           <a class="btn" href={aside.followMe.href} target="_blank" rel="noopener">GitHub</a>

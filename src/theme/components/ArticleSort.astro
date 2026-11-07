@@ -1,5 +1,6 @@
 ---
 import { postUrl, coverOf, type Post } from '@/lib/posts';
+import { optimize, imagePresets } from '@/lib/images';
 import { formatDate, yearOf } from '@/lib/date';
 
 interface Props {
@@ -8,6 +9,7 @@ interface Props {
   posts: Post[];
 }
 const { title, count, posts } = Astro.props;
+const thumbs = new Map(await Promise.all(posts.map(async (p) => [p.id, await optimize(coverOf(p), imagePresets.thumb)] as const)));
 
 // insert a year marker whenever the year changes
 const rows: ({ year: string } | { post: Post })[] = [];
@@ -28,7 +30,7 @@ for (const p of posts) {
       ) : (
         <article class="article-sort-item">
           <a class="article-sort-item-img" href={postUrl(r.post)} tabindex="-1" aria-hidden="true">
-            <img src={coverOf(r.post)} alt="" loading="lazy" decoding="async" width="80" height="80" />
+            <img src={thumbs.get(r.post.id)!.src} srcset={thumbs.get(r.post.id)!.srcset} alt="" loading="lazy" decoding="async" width="80" height="80" />
           </a>
           <div class="article-sort-item-info">
             <time datetime={r.post.data.date.toISOString()}>{formatDate(r.post.data.date)}</time>

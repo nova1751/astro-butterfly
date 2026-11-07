@@ -35,7 +35,7 @@
 
     --font-color: #4c4948;
     --text-highlight-color: #1f2d3d;
-    --muted: #6f6f6f; /* 4.6:1 on white */
+    --muted: #605b60; /* 4.6:1 on white */
     --global-bg: #f7f9fc;
 
     --page-bg: linear-gradient(45deg, #ffdee9 0%, #b5fffc 100%); /* custom.css #web_bg */
@@ -397,4 +397,8 @@
   @media (prefers-reduced-motion: reduce) { .load-bar { transition: opacity 0.3s; } }
   /* busuanzi placeholders while the counter request is in flight */
   [data-bsz][aria-busy='true'] { opacity: 0.5; }
+}
+
+@layer utilities {
+  #footer a, .post-copyright a { text-decoration: underline; text-underline-offset: 3px; }
 }

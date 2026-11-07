@@ -2,6 +2,7 @@
 import { Icon } from 'astro-icon/components';
 import { postUrl, coverOf, categoryUrl, tagUrl, excerpt, type Post } from '@/lib/posts';
 import { formatDate } from '@/lib/date';
+import { optimize, imagePresets } from '@/lib/images';
 
 interface Props {
   post: Post;
@@ -12,13 +13,16 @@ interface Props {
 const { post, reverse = false, eager = false } = Astro.props;
 const { title, date, categories, tags } = post.data;
 const url = postUrl(post);
+const cover = await optimize(coverOf(post), imagePresets.card);
 ---
 
 <article class="recent-post-item card">
   <a class:list={['post_cover', { right: reverse }]} href={url} tabindex="-1" aria-hidden="true">
     <img
       class="post-bg"
-      src={coverOf(post)}
+      src={cover.src}
+      srcset={cover.srcset}
+      sizes={cover.sizes}
       alt=""
       loading={eager ? 'eager' : 'lazy'}
       fetchpriority={eager ? 'high' : undefined}

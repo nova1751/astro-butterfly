@@ -3,6 +3,7 @@ import { url } from '@/lib/url';
 import { Icon } from 'astro-icon/components';
 import { site, copyright } from '@/config';
 import { postUrl, tagUrl, coverOf, getNeighbours, getRelated, type Post } from '@/lib/posts';
+import { optimize, imagePresets, type Img } from '@/lib/images';
 import { formatDate } from '@/lib/date';
 
 interface Props {
@@ -12,6 +13,10 @@ const { post } = Astro.props;
 const permalink = new URL(postUrl(post), Astro.site).href;
 const { newer, older } = await getNeighbours(post);
 const related = await getRelated(post);
+const covers = new Map<string, Img>(
+  await Promise.all([newer, older, ...related].filter((p): p is Post => !!p).map(async (p) => [p.id, await optimize(coverOf(p), imagePresets.pager)] as const)),
+);
+const cover = (p: Post) => covers.get(p.id)!;
 
 const enc = encodeURIComponent;
 const shares = [
@@ -58,7 +63,7 @@ const shares = [
   {
     newer && (
       <a class:list={['pagination-related', 'prev-post', { full: !older }]} href={postUrl(newer)}>
-        <img class="cover" src={coverOf(newer)} alt="" loading="lazy" decoding="async" />
+        <img class="cover" src={cover(newer).src} srcset={cover(newer).srcset} sizes={cover(newer).sizes} alt="" loading="lazy" decoding="async" />
         <span class="pagination-info">
           <span class="label">上一篇</span>
           <span class="info-item">{newer.data.title}</span>
@@ -69,7 +74,7 @@ const shares = [
   {
     older && (
       <a class:list={['pagination-related', 'next-post', { full: !newer }]} href={postUrl(older)}>
-        <img class="cover" src={coverOf(older)} alt="" loading="lazy" decoding="async" />
+        <img class="cover" src={cover(older).src} srcset={cover(older).srcset} sizes={cover(older).sizes} alt="" loading="lazy" decoding="async" />
         <span class="pagination-info">
           <span class="label">下一篇</span>
           <span class="info-item">{older.data.title}</span>
@@ -89,7 +94,7 @@ const shares = [
       <div class="relatedPosts-list">
         {related.map((p) => (
           <a class="pagination-related" href={postUrl(p)} title={p.data.title}>
-            <img class="cover" src={coverOf(p)} alt="" loading="lazy" decoding="async" />
+            <img class="cover" src={cover(p).src} srcset={cover(p).srcset} sizes={cover(p).sizes} alt="" loading="lazy" decoding="async" />
             <span class="pagination-info center">
               <span class="date">
                 <Icon name="fa6-regular:calendar-days" /> {formatDate(p.data.date)}

@@ -17,14 +17,15 @@
     "withastro"
   ],
   "scripts": {
-    "dev": "astro dev",
-    "build": "astro build && pagefind --site dist",
+    "dev": "node scripts/build-font.mjs && astro dev",
+    "build": "node scripts/build-font.mjs && node scripts/build-site.mjs && pagefind --site dist",
     "preview": "astro preview",
-    "check": "astro check",
+    "check": "node scripts/build-font.mjs && astro check",
     "test": "vitest run",
     "test:e2e": "playwright test",
     "new": "node scripts/new-post.mjs",
-    "migrate:tags": "node scripts/migrate-tags.mjs"
+    "migrate:tags": "node scripts/migrate-tags.mjs",
+    "build:font": "node scripts/build-font.mjs"
   },
   "dependencies": {
     "@astrojs/markdown-remark": "7.3.6",
@@ -63,7 +64,8 @@
     "mdast-util-directive": "3.2.0",
     "pagefind": "1.6.0",
     "typescript": "6.0.3",
-    "vitest": "5.1.0"
+    "vitest": "5.1.0",
+    "subset-font": "2.4.0"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

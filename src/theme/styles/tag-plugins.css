@@ -131,7 +131,7 @@
   }
 
   :root[data-theme='dark'] .note { filter: brightness(0.8); }
-  :root[data-theme='dark'] .note :not(pre) > code { background: rgba(27, 31, 35, 0.05); }
+  :root[data-theme='dark'] .note :not(pre) > code { color: #983328; background: rgba(27, 31, 35, 0.05); }
   html.read-mode .note > .note-icon,
   html.read-mode .note::before { background: var(--font-color); }
 
