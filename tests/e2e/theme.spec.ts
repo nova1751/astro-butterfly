@@ -1,0 +1,105 @@
+import { test, expect, type Page } from '@playwright/test';
+
+// Runs against `pnpm build` output with the example content and the default config
+// (no comment / weather / music / counter services configured).
+
+const TAGS_POST = '/posts/4d5e6f70/';
+const CODE_POST = '/posts/3c4d5e6f/';
+
+/** Never let a test depend on third-party services. */
+async function offline(page: Page) {
+  await page.route(/^https?:\/\/(?!127\.0\.0\.1)/, (route) => route.abort());
+}
+
+test.beforeEach(async ({ page }) => offline(page));
+
+test('home lists the example posts and the aside cards', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('#recent-posts article')).toHaveCount(4);
+  for (const card of ['.card-info', '.card-announcement', '.card-categories', '.card-tags', '.card-archives', '.card-webinfo']) {
+    await expect(page.locator(card)).toBeVisible();
+  }
+});
+
+test('unconfigured services stay out of the page', async ({ page }) => {
+  await page.goto(TAGS_POST);
+  await expect(page.locator('#post-comment')).toHaveCount(0); // no Twikoo envId
+  await expect(page.locator('.card-newest-comments')).toHaveCount(0);
+  await expect(page.locator('#global-music')).toHaveCount(0); // no playlist id
+  await expect(page.locator('[data-bsz]')).toHaveCount(0); // busuanzi off
+  await page.goto('/');
+  await expect(page.locator('[data-clock-hm]')).not.toHaveText('--:--'); // clock still ticks
+  await expect(page.locator('[data-wx-weather]')).toBeHidden(); // but no weather without a key
+});
+
+test('post page: meta, TOC and every tag plugin render', async ({ page }) => {
+  await page.goto(TAGS_POST);
+  await expect(page.locator('.post-title')).toHaveText('标签外挂示例');
+  await expect(page.locator('#card-toc a, .card-toc a').first()).toBeVisible();
+  for (const sel of ['.note.info', '.note.success', '.note.primary', '.note.warning', '.note.danger', '.note.icon-padding', '.tip.bolt', 'details.folding-tag', '.tabs', 'span.p.red', '.checkbox.checked', '.psw', '.bubble-content', 'a.site-card']) {
+    await expect(page.locator(`#article-container ${sel}`).first(), sel).toBeAttached();
+  }
+});
+
+test('tabs switch by click and arrow keys', async ({ page }) => {
+  await page.goto(TAGS_POST);
+  const tabs = page.locator('.tabs').first();
+  const second = tabs.getByRole('tab').nth(1);
+  await second.click();
+  await expect(second).toHaveAttribute('aria-selected', 'true');
+  await page.keyboard.press('ArrowRight');
+  await expect(tabs.getByRole('tab').nth(2)).toHaveAttribute('aria-selected', 'true');
+  await expect(tabs.locator('[role=tabpanel]').nth(2)).toBeVisible(); // hidden panels drop out of getByRole
+  await expect(tabs.locator('[role=tabpanel]').nth(0)).toBeHidden();
+});
+
+test('long code blocks clamp and expand', async ({ page }) => {
+  await page.goto(CODE_POST);
+  const block = page.locator('.expressive-code.has-expand').first();
+  const pre = block.locator('pre');
+  await expect(block).toHaveClass(/is-limited/);
+  expect((await pre.boundingBox())!.height).toBeLessThanOrEqual(361);
+  await block.locator('.code-expand').click();
+  await expect(block).not.toHaveClass(/is-limited/);
+  expect(await pre.evaluate((el) => el.scrollHeight <= el.clientHeight + 1)).toBe(true);
+});
+
+test('dark mode toggles and is remembered', async ({ page }) => {
+  await page.goto('/');
+  const start = await page.locator('html').getAttribute('data-theme');
+  await page.mouse.wheel(0, 400);
+  await page.locator('[data-rightside-config]').click();
+  await page.locator('[data-darkmode]').click();
+  const next = start === 'dark' ? 'light' : 'dark';
+  await expect(page.locator('html')).toHaveAttribute('data-theme', next);
+  await page.reload();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', next);
+});
+
+test('site search finds a post', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('[data-search-open]').first().click();
+  await page.locator('[data-search-input]').fill('标签外挂');
+  await expect(page.locator('[data-search-results] a', { hasText: '标签外挂示例' }).first()).toBeVisible();
+});
+
+test('feed, sitemap, robots and manifest are generated', async ({ request }) => {
+  const feed = await (await request.get('/atom.xml')).text();
+  expect(feed.match(/<entry>/g)).toHaveLength(4);
+  expect(await (await request.get('/sitemap.xml')).text()).toContain('/posts/1a2b3c4d/');
+  expect(await (await request.get('/robots.txt')).text()).toContain('Sitemap:');
+  const manifest = await (await request.get('/manifest.webmanifest')).json();
+  expect(manifest.name).toBeTruthy();
+});
+
+test('unknown URLs get the 404 page', async ({ page }) => {
+  const res = await page.goto('/no-such-page/');
+  expect(res?.status()).toBe(404);
+});
+
+test('mobile layout has no horizontal scroll @mobile', async ({ page }) => {
+  for (const path of ['/', TAGS_POST, CODE_POST]) {
+    await page.goto(path);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), path).toBe(true);
+  }
+});

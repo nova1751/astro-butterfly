@@ -1,0 +1,194 @@
+---
+import { music } from '@/config';
+---
+
+<!-- Global floating APlayer; persists across client-side navigations so playback never stops.
+     Without a playlist id only the skin below ships (still used by ::music embeds). -->
+{
+  music.global.id && (
+    <div
+      id="global-music"
+      transition:persist="global-music"
+      data-global-music
+      data-id={music.global.id}
+      data-server={music.global.server}
+      data-type={music.global.type}
+      data-api={music.api}
+    />
+  )
+}
+
+<style is:global>
+  /*
+   * APlayer skin built on the theme tokens, so the player follows light/dark and
+   * looks like the rest of the cards. APlayer's CSS is injected after ours, hence
+   * the `:root` prefix on every rule. Width and position overrides also handle
+   * the inline styles written by the library.
+   */
+  :root .aplayer {
+    --ap-bg: var(--card-solid-bg);
+    --ap-line: var(--light-grey);
+    --ap-lyric-muted: #737985;
+    min-width: 0;
+    max-width: 100%;
+    margin: 0;
+    border: 1px solid var(--ap-line);
+    border-radius: 10px;
+    background: var(--ap-bg);
+    box-shadow: none;
+    color: var(--font-color);
+    font-family: var(--font-family);
+  }
+  :root .aplayer .aplayer-pic { border-radius: 9px 0 0 0; }
+  :root .aplayer:not(.aplayer-withlist) .aplayer-pic { border-radius: 9px 0 0 9px; }
+  :root .aplayer .aplayer-pic .aplayer-button { background: rgba(0, 0, 0, 0.32); }
+  :root .aplayer .aplayer-info .aplayer-music .aplayer-title { color: var(--text-highlight-color); font-size: 14px; }
+  :root .aplayer .aplayer-info .aplayer-music .aplayer-author,
+  :root .aplayer .aplayer-info .aplayer-controller .aplayer-time { color: var(--muted); }
+  :root .aplayer.aplayer-withlist .aplayer-info { border-bottom-color: var(--ap-line); }
+  :root .aplayer .aplayer-info .aplayer-controller .aplayer-bar-wrap .aplayer-bar { background: var(--light-grey); }
+  :root .aplayer .aplayer-info .aplayer-controller .aplayer-bar-wrap .aplayer-bar .aplayer-loaded { background: var(--dark-grey); }
+  :root .aplayer .aplayer-icon path { fill: var(--muted); }
+  :root .aplayer .aplayer-icon:hover path { fill: var(--theme-color); }
+  :root .aplayer .aplayer-pic .aplayer-button path { fill: #fff; }
+  :root .aplayer .aplayer-info .aplayer-controller .aplayer-volume-wrap .aplayer-volume-bar-wrap .aplayer-volume-bar { background: var(--dark-grey); }
+  /* APlayer paints played/thumb/volume inline from its `theme` option; follow the mode-aware token instead. */
+  :root .aplayer .aplayer-info .aplayer-controller .aplayer-bar-wrap .aplayer-bar .aplayer-played,
+  :root .aplayer .aplayer-info .aplayer-controller .aplayer-volume-wrap .aplayer-volume-bar-wrap .aplayer-volume-bar .aplayer-volume { background: var(--theme-color) !important; }
+  :root .aplayer .aplayer-info .aplayer-controller .aplayer-bar-wrap .aplayer-bar .aplayer-played .aplayer-thumb { background: var(--theme-color) !important; }
+  :root .aplayer .aplayer-info .aplayer-controller .aplayer-bar-wrap { min-width: 0; }
+  :root .aplayer .aplayer-info .aplayer-controller .aplayer-time { flex: none; }
+
+  :root .aplayer .aplayer-lrc { background: transparent; text-shadow: none; }
+  :root .aplayer .aplayer-lrc::before,
+  :root .aplayer .aplayer-lrc::after { display: none; }
+  /* APlayer advances lyrics in 16px steps: keep that line height and its transforms. */
+  :root .aplayer .aplayer-lrc p { font-size: 13px; color: var(--ap-lyric-muted); opacity: 1; }
+  /* current line in the accent, like the played bar and the active list item */
+  :root .aplayer .aplayer-lrc p.aplayer-lrc-current { color: var(--theme-color); font-weight: 600; }
+  :root .aplayer { --ap-lyric-halo: rgba(255, 255, 255, 0.6); }
+  :root[data-theme='dark'] .aplayer { --ap-lyric-muted: #929aa6; --ap-lyric-halo: rgba(0, 0, 0, 0.5); }
+
+  :root .music-embed.aplayer { box-sizing: border-box; width: 100%; }
+
+  :root .aplayer .aplayer-list ol {
+    scrollbar-width: thin;
+    scrollbar-color: var(--sb-thumb) transparent;
+    overscroll-behavior-y: contain;
+  }
+
+  :root .aplayer .aplayer-list ol li {
+    display: flex;
+    border-top-color: var(--ap-line);
+    color: var(--font-color);
+  }
+  :root .aplayer .aplayer-list ol li:hover { background: var(--theme-soft); }
+  :root .aplayer .aplayer-list ol li.aplayer-list-light { background: var(--theme-soft); }
+  :root .aplayer .aplayer-list ol li.aplayer-list-light .aplayer-list-title { color: var(--theme-color); }
+  :root .aplayer .aplayer-list ol li .aplayer-list-index,
+  :root .aplayer .aplayer-list ol li .aplayer-list-author { color: var(--muted); }
+  :root .aplayer .aplayer-list ol li .aplayer-list-index { flex: none; }
+  :root .aplayer .aplayer-list ol li .aplayer-list-title {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  :root .aplayer .aplayer-list ol li .aplayer-list-author {
+    flex: 0 1 auto;
+    max-width: 38%;
+    min-width: 0;
+    margin-left: 12px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  /* ---- global fixed player (custom.css: tucked in at the left, revealed on hover) ---- */
+  :root .aplayer.aplayer-fixed {
+    --ap-fixed-width: min(400px, 100vw);
+    --ap-fixed-height: 68px; /* 66px cover + the body's top and bottom borders */
+    z-index: 95;
+    width: var(--ap-fixed-width);
+    border: 0;
+    background: transparent;
+  }
+  :root .aplayer.aplayer-fixed .aplayer-body {
+    box-sizing: border-box;
+    width: var(--ap-fixed-width) !important; /* APlayer writes a content-box width inline. */
+    max-width: var(--ap-fixed-width);
+    background: var(--ap-bg);
+    border: 1px solid var(--ap-line);
+    border-left: 0;
+    border-radius: 0 10px 0 0;
+    box-shadow: var(--card-box-shadow);
+  }
+  :root .aplayer.aplayer-fixed .aplayer-pic { border-radius: 0; }
+  :root .aplayer.aplayer-fixed .aplayer-info { border-top: 0; }
+  :root .aplayer.aplayer-fixed .aplayer-list {
+    margin-bottom: calc(var(--ap-fixed-height) + env(safe-area-inset-bottom));
+    border: 1px solid var(--ap-line);
+    border-bottom: 0;
+    border-radius: 0 10px 0 0;
+    background: var(--ap-bg);
+  }
+  :root .aplayer.aplayer-fixed .aplayer-lrc {
+    box-sizing: border-box;
+    left: 50%;
+    right: auto;
+    bottom: calc(80px + env(safe-area-inset-bottom));
+    /* Desktop-lyrics style (APlayer / NetEase / QQ Music): no panel, just text. One crisp
+       1px shadow keeps the glyph edges readable without a visible glow. */
+    width: min(420px, calc(100vw - 48px));
+    height: 16px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    text-shadow: 0 1px 1px var(--ap-lyric-halo);
+    transform: translateX(-50%);
+    pointer-events: none;
+  }
+  :root .aplayer.aplayer-fixed .aplayer-lrc p {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap; /* a long line never wraps out of the 16px step */
+  }
+  /* Clip the animated text without opaque masks covering the translucent surface. */
+  :root .aplayer.aplayer-fixed .aplayer-lrc-viewport {
+    height: 16px;
+    overflow: hidden;
+  }
+  :root .aplayer.aplayer-fixed .aplayer-miniswitcher {
+    box-sizing: border-box;
+    background: var(--ap-bg);
+    border-left: 1px solid var(--ap-line);
+    border-radius: 0 10px 0 0;
+  }
+  :root .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body {
+    width: 85px !important; /* 66px cover + 18px switcher + 1px outside border */
+    left: -66px !important; /* APlayer sets `left` inline */
+    transition: left 0.3s;
+  }
+  :root .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body:hover {
+    left: 0 !important;
+  }
+  :root .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body:has(:focus-visible) {
+    left: 0 !important;
+  }
+  :root[data-theme='dark'] .aplayer.aplayer-fixed .aplayer-body { box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04), var(--card-box-shadow); }
+
+  @media (max-width: 768px) {
+    .music-embed.aplayer .aplayer-list,
+    .music-embed.aplayer .aplayer-list ol {
+      max-height: 300px !important;
+    }
+    :root .aplayer.aplayer-fixed {
+      bottom: env(safe-area-inset-bottom);
+    }
+    :root .aplayer.aplayer-fixed .aplayer-body {
+      bottom: env(safe-area-inset-bottom);
+    }
+  }
+</style>
