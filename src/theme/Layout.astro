@@ -4,8 +4,6 @@ import { ClientRouter } from 'astro:transitions';
 import './generated/lxgw.css';
 import font from './generated/font.json';
 import './styles/global.css';
-import './styles/content.css';
-import './styles/tag-plugins.css';
 import { iconCss } from './icons-css';
 import { site, features } from '@/config';
 import Header from './components/Header.astro';
@@ -48,7 +46,7 @@ const ogImage = new URL(url(image), Astro.site).href;
 ---
 
 <!doctype html>
-<html lang={site.lang} data-theme="light">
+<html lang={site.lang} data-theme="light" data-fallback-font={font.preload ? url('/fonts/lxgw/fallback.css') : undefined}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -79,6 +77,7 @@ const ogImage = new URL(url(image), Astro.site).href;
     {modified && <meta property="article:modified_time" content={modified.toISOString()} />}
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:image" content={ogImage} />
+    <slot name="head" />
 
     <style set:html={iconCss}></style>
 

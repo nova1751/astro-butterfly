@@ -10,7 +10,7 @@ const year = new Date().getFullYear();
       {
         footerBadges.map((b) => (
           <a href={b.href} title={b.title} target="_blank" rel="noopener">
-            <img src={b.img} alt={b.title} height="20" loading="lazy" decoding="async" />
+            <img src={b.img} alt={b.title} width={b.width} height="20" loading="lazy" decoding="async" />
           </a>
         ))
       }

@@ -3,6 +3,7 @@ import { slugize } from './slug';
 import { yearOf, monthOf } from './date';
 import { resolveUpdated } from './git-dates';
 import { site } from '@/config';
+import { plainExcerpt } from './excerpt-text.mjs';
 import { url } from './url';
 
 type Entry = CollectionEntry<'posts'>;
@@ -126,18 +127,5 @@ export const pageUrl = (base: string, n: number) => (n <= 1 ? base : `${base}pag
 
 /** Plain-text excerpt for cards & meta description. */
 export function excerpt(p: Post, length = 150) {
-  if (p.data.description) return p.data.description;
-  const text = (p.body ?? '')
-    .replace(/```[\s\S]*?```/g, ' ')
-    .replace(/^\s*>\s?\[!\w+\].*$/gm, ' ')
-    .replace(/^\s*:{2,}.*$/gm, ' ')
-    .replace(/:(\w+)\[([^\]]*)\](\{[^}]*\})?/g, '$2')
-    .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
-    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\$\$[\s\S]*?\$\$/g, ' ')
-    .replace(/[#>*_`~|-]+/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-  return text.length > length ? `${text.slice(0, length)}…` : text;
+  return p.data.description || plainExcerpt(p.body ?? '', length);
 }

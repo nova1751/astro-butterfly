@@ -3,6 +3,8 @@ import { url } from '@/lib/url';
 import type { GetStaticPaths } from 'astro';
 import { getCollection, render } from 'astro:content';
 import 'katex/dist/katex.min.css';
+import '@/theme/styles/content.css';
+import '@/theme/styles/tag-plugins.css';
 import Layout from '@/theme/Layout.astro';
 import Comments from '@/theme/components/Comments.astro';
 import Envelope from '@/theme/components/Envelope.astro';

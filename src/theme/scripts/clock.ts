@@ -1,4 +1,5 @@
 import { load, save } from './store';
+import { useFallbackFont } from './fallback-font';
 
 /**
  * Aside clock + weather (successor of hexo-butterfly-clock).
@@ -119,6 +120,7 @@ function weatherIcon(code: number): [string, string] {
 }
 
 function setCity(el: HTMLElement, city: string) {
+  useFallbackFont(); // any city name
   const chip = el.querySelector<HTMLElement>('[data-wx-city]')!;
   chip.querySelector('span')!.textContent = city;
   chip.title = city; // full name when the chip is cut off

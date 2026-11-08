@@ -22,7 +22,7 @@
   :root {
     color-scheme: light;
     --global-font-size: 15px;
-    --font-family: 'LXGW WenKai Screen', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Lato, Roboto,
+    --font-family: 'LXGW WenKai Screen', 'LXGW WenKai Screen Fallback', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Lato, Roboto,
       'PingFang SC', 'Microsoft YaHei', sans-serif;
     --code-font-family: ui-monospace, 'Cascadia Code', 'JetBrains Mono', 'SF Mono', Consolas, monospace;
     --code-padding-block: 12px;

@@ -6,8 +6,10 @@
  * every post, page and UI string, orders the characters by how often *this*
  * site uses them and cuts a handful of chunks from the full font:
  *
- *   chunk 0  all UI text + the most frequent characters (~1000), preloaded
- *   chunk 1+ the rest of the site's characters, by frequency
+ *   chunk 0  the page shell: UI text, every post's title / tags / categories,
+ *            the home page excerpts, ASCII and common spaces (preloaded; the
+ *            home and list pages need nothing else)
+ *   chunk 1+ the rest of the site's characters, by frequency (post bodies)
  *
  * The generated CSS imports the npm package first and declares these chunks
  * after it. For faces of one family whose unicode-ranges overlap, browsers
@@ -23,6 +25,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { join, extname } from 'node:path';
 import subsetFont from 'subset-font';
+import { plainExcerpt } from '../src/lib/excerpt-text.mjs';
 
 const FONT_VERSION = 'v1.530';
 const FONT_URL = `https://github.com/lxgw/LxgwWenKai-Screen/releases/download/${FONT_VERSION}/LXGWWenKaiGBScreen.ttf`;
@@ -30,9 +33,12 @@ const FONT_CACHE = `node_modules/.cache/lxgw/LXGWWenKaiGBScreen-${FONT_VERSION}.
 const OUT_DIR = 'public/fonts/lxgw'; // served as /fonts/lxgw/*
 const GEN_DIR = 'src/theme/generated';
 const FAMILY = 'LXGW WenKai Screen';
-const FIRST_CHUNK = 1000;
-const CHUNK = 500;
-const SCRIPT_VERSION = 1; // bump when the chunking logic changes
+// Chunk 0 is the page shell; the rest of the site's characters go in chunks of
+// this size. Posts share their vocabulary so widely (an average post uses ~85%
+// of the non-shell characters) that finer chunks only add requests.
+const CHUNK = 1500;
+const HOME_POSTS = 12; // pagination.home
+const SCRIPT_VERSION = 4; // bump when the chunking logic changes
 
 const walk = (dir) =>
   existsSync(dir)
@@ -60,8 +66,44 @@ const ui = count(
   walk('src').filter((f) => ['.astro', '.ts', '.mjs', '.css', '.json'].includes(extname(f)) && !NOT_UI.some((n) => f.endsWith(n))),
   new Map(),
 );
+// Posts and pages: src/content/ by default, source/ when pointed at a Hexo blog.
 const content = count([...walk('source'), ...walk('src/content')].filter((f) => extname(f) === '.md'), new Map());
 for (let cp = 0x20; cp < 0x7f; cp++) ui.set(String.fromCodePoint(cp), Infinity); // ASCII always
+
+// Spaces Markdown and typography produce (nbsp, thin / zero-width spaces). Left
+// out of the shell, each one would pull a whole ~60 KB chunk of the fallback font.
+for (const cp of [0xa0, 0x2002, 0x2003, 0x2009, 0x200a, 0x200b, 0x200c, 0x200d, 0x2060, 0x3000]) {
+  ui.set(String.fromCodePoint(cp), Infinity);
+}
+
+// Shell text that every page or the home page shows, read from the sources (not
+// from a previous build, so local and CI builds agree): titles, tags and
+// categories of every post (cards, aside, archives, related posts) and the
+// opening of the newest posts (home page excerpts).
+const posts = [...walk('source/_posts'), ...walk('src/content/posts')]
+  .filter((f) => extname(f) === '.md')
+  .map((f) => {
+    const text = readFileSync(f, 'utf8').replace(/\r\n/g, '\n');
+    const fm = text.match(/^---\n([\s\S]*?)\n---/)?.[1] ?? '';
+    return { fm, body: text.slice(fm.length + 8), date: fm.match(/^date:\s*(.+)$/m)?.[1] ?? '' };
+  });
+// The aside clock shows QWeather text on every page: its weather descriptions
+// and wind directions are a closed set. (City names are open-ended; they load
+// after the page anyway and use the fallback chunks.) © comes from `&copy;`.
+const WEATHER =
+  '晴多云少云晴间多云阴阵雨强阵雨雷阵雨强雷阵雨雷阵雨伴有冰雹小雨中雨大雨极端降雨毛毛雨细雨暴雨大暴雨特大暴雨冻雨' +
+  '小到中雨中到大雨大到暴雨暴雨到大暴雨大暴雨到特大暴雨雨雪天气雨夹雪阵雨夹雪小雪中雪大雪暴雪阵雪小到中雪中到大雪大到暴雪' +
+  '薄雾雾霾扬沙浮尘沙尘暴强沙尘暴浓雾强浓雾中度霾重度霾严重霾大雾特强浓雾热冷未知' +
+  '东南西北偏风无持续旋转不定级天气加载中暂不可用定位©';
+const shellText = [
+  WEATHER,
+  ...posts.flatMap((p) => p.fm.split('\n').filter((l) => /^(title|description):|^\s*-\s/.test(l))),
+  ...[...posts]
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(0, HOME_POSTS)
+    .map((p) => plainExcerpt(p.body)),
+].join('\n');
+for (const ch of shellText) if (!ui.has(ch)) ui.set(ch, 1);
 
 const uiChars = [...ui.keys()].filter(isText);
 const rest = [...content.entries()]
@@ -69,8 +111,7 @@ const rest = [...content.entries()]
   .sort((a, b) => b[1] - a[1] || a[0].codePointAt(0) - b[0].codePointAt(0))
   .map(([ch]) => ch);
 
-const head = [...uiChars, ...rest.splice(0, Math.max(0, FIRST_CHUNK - uiChars.length))];
-const chunks = [head];
+const chunks = [uiChars];
 while (rest.length) chunks.push(rest.splice(0, CHUNK));
 
 const key = createHash('sha256')
@@ -179,7 +220,15 @@ function unicodeRange(chars) {
   return out.join(',');
 }
 
+/** Drop chunk files of earlier character sets so they aren't deployed. */
+function pruneChunks(manifest) {
+  if (!manifest || !existsSync(OUT_DIR)) return;
+  const keep = new Set(manifest.files.map((f) => f.file));
+  for (const f of readdirSync(OUT_DIR)) if (/^\d+\.[a-f0-9]{8}\.woff2$/.test(f) && !keep.has(f)) rmSync(join(OUT_DIR, f));
+}
+
 function writeOutputs(manifest) {
+  pruneChunks(manifest);
   const faces = (manifest?.files ?? []).map(
     (f) =>
       `@font-face{font-family:'${FAMILY}';font-style:normal;font-weight:400;font-display:swap;` +
@@ -189,13 +238,46 @@ function writeOutputs(manifest) {
     join(GEN_DIR, 'lxgw.css'),
     [
       '/* generated by scripts/build-font.mjs — do not edit */',
-      "@import 'lxgw-wenkai-screen-webfont/lxgwwenkaigbscreen.css';",
-      ...faces,
+      // Without site chunks, the npm font is the font: load it with the page.
+      ...(manifest ? faces : ["@import 'lxgw-wenkai-screen-webfont/lxgwwenkaigbscreen.css';"]),
       '',
     ].join('\n'),
   );
+  // Only needed next to site chunks; without them lxgw.css imports the npm font itself.
+  if (manifest) {
+    try {
+      writeFallback();
+    } catch (e) {
+      console.warn(`[font] fallback font not written: ${e.message}`);
+    }
+  }
   writeFileSync(
     join(GEN_DIR, 'font.json'),
     JSON.stringify({ preload: manifest ? `/fonts/lxgw/${manifest.files[0].file}` : null }, null, 2) + '\n',
   );
+}
+
+/**
+ * The full npm font as a separate family, 'LXGW WenKai Screen Fallback', listed
+ * after the site family in --font-family (global.css). It only covers text the
+ * site's chunks don't: comments, the weather city, search input, traditional
+ * Chinese after the switch. None of that is part of the first paint, so the
+ * page doesn't link this stylesheet: fallback-font.ts adds it when one of those
+ * features runs. Its 97 @font-face rules (~36 KB) never block rendering, and a
+ * font file is only fetched when one of its characters shows up. URLs are
+ * relative to fallback.css, so a sub-path deploy (`base`) works too.
+ */
+function writeFallback() {
+  const pkg = 'node_modules/lxgw-wenkai-screen-webfont';
+  const dir = join(OUT_DIR, 'fallback');
+  mkdirSync(dir, { recursive: true });
+  for (const f of readdirSync(join(pkg, 'files')).filter((f) => f.startsWith('lxgwwenkaigbscreen-subset-'))) {
+    const src = join(pkg, 'files', f);
+    const dest = join(dir, f);
+    if (!existsSync(dest) || statSync(dest).size !== statSync(src).size) writeFileSync(dest, readFileSync(src));
+  }
+  const css = readFileSync(join(pkg, 'lxgwwenkaigbscreen.css'), 'utf8')
+    .replace(/font-family:\s*'LXGW WenKai Screen'/g, `font-family: '${FAMILY} Fallback'`)
+    .replace(/url\('\.\/files\//g, "url('fallback/");
+  writeFileSync(join(OUT_DIR, 'fallback.css'), css);
 }

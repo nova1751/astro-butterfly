@@ -8,9 +8,12 @@ interface Props {
   post: Post;
   /** cover on the right for odd items (Butterfly position: both) */
   reverse?: boolean;
+  /** Above the fold on desktop: load right away instead of lazily */
   eager?: boolean;
+  /** The LCP image (first card): also fetch it at high priority */
+  priority?: boolean;
 }
-const { post, reverse = false, eager = false } = Astro.props;
+const { post, reverse = false, eager = false, priority = false } = Astro.props;
 const { title, date, categories, tags } = post.data;
 const url = postUrl(post);
 const cover = await optimize(coverOf(post), imagePresets.card);
@@ -24,8 +27,8 @@ const cover = await optimize(coverOf(post), imagePresets.card);
       srcset={cover.srcset}
       sizes={cover.sizes}
       alt=""
-      loading={eager ? 'eager' : 'lazy'}
-      fetchpriority={eager ? 'high' : undefined}
+      loading={eager || priority ? 'eager' : 'lazy'}
+      fetchpriority={priority ? 'high' : undefined}
       decoding="async"
       width="520"
       height="252"

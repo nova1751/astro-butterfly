@@ -1,4 +1,5 @@
 import { load, save, toast } from './store';
+import { useFallbackFont } from './fallback-font';
 
 /**
  * Simplified ⇄ Traditional switch (Butterfly `translate`, rightside "繁" button).
@@ -53,6 +54,7 @@ function convert(text: string, map: Map<string, string>) {
 const skipped = (el: Element | null) => !!el?.closest(SKIP);
 
 function toTraditional(scope: Node) {
+  useFallbackFont(); // most traditional characters are outside the site's font chunks
   const map = toHant!;
   const walker = document.createTreeWalker(scope, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT, {
     acceptNode: (n) =>

@@ -1,4 +1,5 @@
 /** Pagefind search in a native <dialog>. The index is built after `astro build`. */
+import { useFallbackFont } from './fallback-font';
 
 type PagefindResult = { id: string; data: () => Promise<PagefindData> };
 type PagefindData = {
@@ -61,6 +62,7 @@ export function initSearch() {
     const dlg = dialog();
     if (!dlg) return;
     dlg.showModal();
+    useFallbackFont(); // whatever the visitor types
     document.documentElement.style.overflow = 'hidden';
     const input = dlg.querySelector<HTMLInputElement>('[data-search-input]')!;
     input.focus();

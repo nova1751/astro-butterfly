@@ -1,5 +1,6 @@
 import { load, save } from './store';
 import { bindCommentImages } from './content';
+import { useFallbackFont } from './fallback-font';
 
 type Twikoo = {
   init: (o: object) => Promise<void>;
@@ -28,6 +29,7 @@ function initCommentBox() {
   const start = async () => {
     try {
       const tk = await loadTwikoo();
+      useFallbackFont(); // visitors' comments use characters the site never does
       await tk.init({ envId: el.dataset.envId, el: '#twikoo', path: el.dataset.path, lang: 'zh-CN' });
       bindCommentImages(el);
       new MutationObserver(() => bindCommentImages(el)).observe(el, { childList: true, subtree: true });
@@ -62,6 +64,7 @@ function initNewestComments() {
   if (!envId) return;
 
   const render = (items: RecentComment[]) => {
+    useFallbackFont();
     list.innerHTML = items.length
       ? items
           .map(

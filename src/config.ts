@@ -162,10 +162,11 @@ export const envelope = {
 };
 
 /** shields.io badges in the footer; an empty array hides the row */
-export const footerBadges = [
-  { href: 'https://astro.build/', title: '博客框架为 Astro', img: 'https://img.shields.io/badge/Frame-Astro-ff5d01?style=flat&logo=astro' },
-  { href: 'https://github.com/nova1751/astro-butterfly', title: '本站主题为 Astro Butterfly', img: 'https://img.shields.io/badge/Theme-Astro%20Butterfly-49b1f5?style=flat&logo=astro&logoColor=white' },
-  { href: 'https://creativecommons.org/licenses/by-nc-sa/4.0/', title: '本站采用 CC BY-NC-SA 4.0 许可协议', img: 'https://img.shields.io/badge/Copyright-BY--NC--SA%204.0-d42328?style=flat&logo=Claris' },
+/** Footer badges. `width` is the badge's width at 20px high (open the image to read it); it reserves the space before the image loads. */
+export const footerBadges: { href: string; title: string; img: string; width?: number }[] = [
+  { href: 'https://astro.build/', title: '博客框架为 Astro', img: 'https://img.shields.io/badge/Frame-Astro-ff5d01?style=flat&logo=astro', width: 101 },
+  { href: 'https://github.com/nova1751/astro-butterfly', title: '本站主题为 Astro Butterfly', img: 'https://img.shields.io/badge/Theme-Astro%20Butterfly-49b1f5?style=flat&logo=astro&logoColor=white', width: 155 },
+  { href: 'https://creativecommons.org/licenses/by-nc-sa/4.0/', title: '本站采用 CC BY-NC-SA 4.0 许可协议', img: 'https://img.shields.io/badge/Copyright-BY--NC--SA%204.0-d42328?style=flat&logo=Claris', width: 167 },
 ];
 
 /** Optional effects carried over from Butterfly. */

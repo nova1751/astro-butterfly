@@ -2,6 +2,8 @@
 import type { GetStaticPaths } from 'astro';
 import { render } from 'astro:content';
 import 'katex/dist/katex.min.css';
+import '@/theme/styles/content.css';
+import '@/theme/styles/tag-plugins.css';
 import Layout from '@/theme/Layout.astro';
 import PostInfo from '@/theme/components/PostInfo.astro';
 import PostFooter from '@/theme/components/PostFooter.astro';
@@ -17,6 +19,11 @@ export const getStaticPaths = (async () => {
 const { post } = Astro.props;
 const { Content, headings, remarkPluginFrontmatter } = await render(post);
 const { wordcount = 0, minutes = 1 } = remarkPluginFrontmatter as { wordcount?: number; minutes?: number };
+// Rendered when the post is already outdated at build time (most are), so the
+// notice doesn't push the article down after load; content.ts only refreshes the
+// day count, and shows it for a post that crossed the limit since the build.
+const outdatedDays = Math.floor((Date.now() - post.data.updated.getTime()) / 86_400_000);
+const outdated = features.outdatedNoticeDays > 0 && outdatedDays >= features.outdatedNoticeDays;
 ---
 
 <Layout
@@ -39,8 +46,10 @@ const { wordcount = 0, minutes = 1 } = remarkPluginFrontmatter as { wordcount?: 
           data-outdated={post.data.updated.toISOString()}
           data-limit={features.outdatedNoticeDays}
           role="note"
-          hidden
-        />
+          hidden={!outdated}
+        >
+          {outdated && `文章最后更新于 ${outdatedDays} 天前，其中的信息可能已经过时。`}
+        </div>
       )
     }
     <div id="article-container" class="article-container" data-pagefind-body>
@@ -74,8 +83,10 @@ const { wordcount = 0, minutes = 1 } = remarkPluginFrontmatter as { wordcount?: 
     width: 1em;
     height: 1em;
     background: currentColor;
-    -webkit-mask: var(--icon-warning) center / contain no-repeat;
-    mask: var(--icon-warning) center / contain no-repeat;
+    -webkit-mask: var(--icon-warning) no-repeat center;
+    -webkit-mask-size: contain;
+    mask: var(--icon-warning) no-repeat center;
+    mask-size: contain;
   }
   @media (max-width: 768px) {
     #post-outdate-notice {
