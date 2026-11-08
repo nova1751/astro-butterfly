@@ -55,7 +55,8 @@ import { clock } from '@/config';
     font-family: 'UnidreamLED';
     src: url('../../assets/fonts/unidream-led.woff2') format('woff2');
     font-display: swap;
-    /* same line box as LXGW WenKai (hhea .928 / .244), so mixed runs share one baseline */
+    /* LXGW WenKai's hhea line box (.928 / .244): rows align on baselines, this only
+       keeps the LED line box the same height as the text around it */
     ascent-override: 92.8%;
     descent-override: 24.4%;
     line-gap-override: 0%;
@@ -80,9 +81,14 @@ import { clock } from '@/config';
   .led {
     font-family: 'UnidreamLED', var(--code-font-family);
   }
+  /* Readings and words line up on their baselines, not their boxes. The LED
+     font and LXGW WenKai have equal ink centres above the baseline, but which
+     metrics a platform reads for WenKai differs (Windows: usWin 1.048/.271,
+     elsewhere hhea .928/.244), so centring line boxes put the LED text 1px
+     high on Windows. Icons centre on the row instead (`.clock-icon`). */
   .clock-row {
     display: flex;
-    align-items: center;
+    align-items: baseline;
     justify-content: space-between;
     gap: 10px;
     min-width: 0;
@@ -103,7 +109,7 @@ import { clock } from '@/config';
   }
   .clock-weather {
     display: inline-flex;
-    align-items: center;
+    align-items: baseline;
     gap: 5px;
     min-width: 0;
     color: var(--font-color);
@@ -151,7 +157,7 @@ import { clock } from '@/config';
   .clock-chip {
     flex: none;
     display: inline-flex;
-    align-items: center;
+    align-items: baseline;
     gap: 4px;
   }
   .clock-chip[hidden] {

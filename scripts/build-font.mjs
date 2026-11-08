@@ -33,6 +33,11 @@ const FONT_CACHE = `node_modules/.cache/lxgw/LXGWWenKaiGBScreen-${FONT_VERSION}.
 const OUT_DIR = 'public/fonts/lxgw'; // served as /fonts/lxgw/*
 const GEN_DIR = 'src/theme/generated';
 const FAMILY = 'LXGW WenKai Screen';
+// The font's hhea line metrics, stated so every platform uses them. Windows
+// otherwise reads usWin (1.048 / .271): the same text sits ~0.05em lower in
+// its line box there, CJK ink below centre, and the LED readings of the aside
+// clock (which use these values) no longer share its line box.
+const METRICS = 'ascent-override:92.8%;descent-override:24.4%;line-gap-override:0%;';
 // Chunk 0 is the page shell; the rest of the site's characters go in chunks of
 // this size. Posts share their vocabulary so widely (an average post uses ~85%
 // of the non-shell characters) that finer chunks only add requests.
@@ -231,7 +236,7 @@ function writeOutputs(manifest) {
   pruneChunks(manifest);
   const faces = (manifest?.files ?? []).map(
     (f) =>
-      `@font-face{font-family:'${FAMILY}';font-style:normal;font-weight:400;font-display:swap;` +
+      `@font-face{font-family:'${FAMILY}';font-style:normal;font-weight:400;font-display:swap;${METRICS}` +
       `src:url('/fonts/lxgw/${f.file}') format('woff2');unicode-range:${f.range}}`,
   );
   writeFileSync(
@@ -278,6 +283,7 @@ function writeFallback() {
   }
   const css = readFileSync(join(pkg, 'lxgwwenkaigbscreen.css'), 'utf8')
     .replace(/font-family:\s*'LXGW WenKai Screen'/g, `font-family: '${FAMILY} Fallback'`)
+    .replace(/font-display:\s*swap;/g, `font-display: swap; ${METRICS}`)
     .replace(/url\('\.\/files\//g, "url('fallback/");
   writeFileSync(join(OUT_DIR, 'fallback.css'), css);
 }
