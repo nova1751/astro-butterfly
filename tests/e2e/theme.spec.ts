@@ -115,6 +115,47 @@ test('mobile layout has no horizontal scroll @mobile', async ({ page }) => {
   }
 });
 
+test('navigation never jumps between the page flow and its fixed position @mobile', async ({ page }) => {
+  await page.goto('/posts/2b3c4d5e/');
+  const nav = page.locator('#nav');
+  const scrollTo = async (top: number) => {
+    await page.evaluate((y) => window.scrollTo({ top: y, behavior: 'instant' }), top);
+    // scroll.ts works in rAF: wait for it, then for a frame showing the result.
+    await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+  };
+  const box = () => nav.evaluate((el) => {
+    const { top, bottom } = el.getBoundingClientRect();
+    return { top: Math.round(top), bottom: Math.round(bottom), position: getComputedStyle(el).position };
+  });
+
+  // Down: still riding with the page, then fixed out of view with no flash back on screen.
+  const height = (await box()).bottom;
+  await scrollTo(height - 10);
+  expect(await box()).toMatchObject({ top: 10 - height, bottom: 10 });
+  await scrollTo(height + 40);
+  await expect(page.locator('html')).not.toHaveClass(/nav-visible/);
+  expect((await box()).bottom).toBeLessThanOrEqual(0);
+
+  // Up: slides in, then stays put all the way to the top instead of snapping into the flow.
+  await scrollTo(600);
+  await scrollTo(400);
+  await expect(page.locator('html')).toHaveClass(/nav-visible/);
+  await expect.poll(async () => (await box()).top).toBe(0);
+  await scrollTo(20);
+  expect(await box()).toMatchObject({ top: 0, position: 'fixed' });
+  await scrollTo(0);
+  expect((await box()).top).toBe(0);
+  expect((await box()).position).not.toBe('fixed');
+  await expect(page.locator('html')).not.toHaveClass(/nav-fixed/);
+
+  // A movement under the tolerance is not a change of direction.
+  await scrollTo(600);
+  await scrollTo(900);
+  await expect(page.locator('html')).not.toHaveClass(/nav-visible/);
+  await scrollTo(898);
+  await expect(page.locator('html')).not.toHaveClass(/nav-visible/);
+});
+
 test('fixed navigation stays above cards after scrolling down then up @mobile', async ({ page }) => {
   for (const path of ['/', TAGS_POST]) {
     await page.goto(path);

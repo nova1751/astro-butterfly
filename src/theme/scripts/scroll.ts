@@ -1,32 +1,48 @@
 const root = document.documentElement;
-const NAV_FIXED_AT = 56;
+const TOOLS_AT = 56;
+/** Smaller moves keep the nav as it is: trackpad jitter, scroll anchoring. They add up. */
+const DIRECTION_TOLERANCE = 4;
 let lastY = 0;
 let ticking = false;
 
-function update() {
-  ticking = false;
-  const y = window.scrollY;
-  const down = y > lastY;
-  lastY = y;
+/**
+ * Butterfly nav: hides while scrolling down, shows while scrolling up. It changes
+ * between the page's flow and `position: fixed` only where both put it in the same
+ * spot, so it never jumps:
+ *  - going down, once it has scrolled fully out of view (`nav-entering` skips the
+ *    slide, or it would flash back on screen just to leave again);
+ *  - going up, at the very top. Until then it stays fixed instead of snapping to its
+ *    place in the flow, part of a screen away.
+ */
+function render(reset = false) {
+  const max = root.scrollHeight - window.innerHeight;
+  // Rubber-band overscroll moves scrollY past both ends and back: not a direction change.
+  const y = Math.max(0, Math.min(window.scrollY, max));
+  const navHeight = document.getElementById('nav')?.offsetHeight ?? 0;
 
-  // Butterfly nav: becomes fixed after 56px, hides while scrolling down, shows while scrolling up
-  const fixed = y > NAV_FIXED_AT;
+  const wasFixed = !reset && root.classList.contains('nav-fixed');
+  let visible = reset || root.classList.contains('nav-visible');
+  if (reset) lastY = y;
+  else if (Math.abs(y - lastY) >= DIRECTION_TOLERANCE) {
+    visible = y < lastY;
+    lastY = y;
+  }
+  const fixed = y > 0 && (wasFixed || y >= navHeight);
+
+  root.classList.toggle('nav-entering', fixed && !wasFixed);
   root.classList.toggle('nav-fixed', fixed);
-  root.classList.toggle('nav-visible', fixed && !down);
-  root.classList.toggle('show-rightside', y > NAV_FIXED_AT);
-  if (!fixed) root.classList.remove('nav-visible');
+  root.classList.toggle('nav-visible', fixed && visible);
+  root.classList.toggle('show-rightside', y > TOOLS_AT);
 
   const percentEl = document.querySelector<HTMLElement>('[data-scroll-percent]');
   if (percentEl) {
-    const max = document.documentElement.scrollHeight - window.innerHeight;
     const pct = max > 0 ? Math.round((y / max) * 100) : 0;
     percentEl.textContent = pct > 0 && pct < 100 ? String(pct) : '';
   }
 }
 
 export function onPageScroll() {
-  lastY = window.scrollY;
-  update();
+  render(true);
 }
 
 export function initScroll() {
@@ -35,7 +51,10 @@ export function initScroll() {
     () => {
       if (!ticking) {
         ticking = true;
-        requestAnimationFrame(update);
+        requestAnimationFrame(() => {
+          ticking = false;
+          render();
+        });
       }
     },
     { passive: true },

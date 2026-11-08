@@ -164,12 +164,16 @@ const [posts, tags, cats, top, logo, avatar] = await Promise.all([
     height: var(--nav-height);
     padding: 0 36px;
     font-size: 1.3em;
-    transition: transform 0.25s var(--ease), background 0.3s, box-shadow 0.3s, opacity 0.2s;
+    transition: transform 0.25s var(--ease), background 0.3s, box-shadow 0.3s, opacity 0.2s, backdrop-filter 0.3s, -webkit-backdrop-filter 0.3s;
   }
   .not-top-img #nav {
     position: relative;
     background: var(--nav-bg);
     box-shadow: var(--nav-shadow);
+  }
+  /* Text fades along with the bar's background when it settles at the top. */
+  #nav :is(#blog-info, .menu-link, .menu-item) {
+    transition: color 0.3s, text-shadow 0.3s;
   }
   :global(html:not(.nav-fixed)) .has-top-img #nav :is(#blog-info, .menu-link, .menu-item) {
     color: #eee;
@@ -179,8 +183,9 @@ const [posts, tags, cats, top, logo, avatar] = await Promise.all([
     position: fixed;
     background: var(--nav-bg);
     box-shadow: var(--nav-shadow);
-    backdrop-filter: saturate(1.4) blur(12px);
+    /* Prefixed first: the CSS minifier keeps only the last of the two. */
     -webkit-backdrop-filter: saturate(1.4) blur(12px);
+    backdrop-filter: saturate(1.4) blur(12px);
   }
   :global(html.nav-fixed) #nav :is(#blog-info, .menu-link, .menu-item) {
     color: var(--font-color);
@@ -189,6 +194,11 @@ const [posts, tags, cats, top, logo, avatar] = await Promise.all([
   :global(html.nav-fixed:not(.nav-visible)) #nav {
     transform: translateY(-100%);
     box-shadow: none;
+  }
+  /* Becoming fixed happens out of view (scroll.ts): nothing there should animate. */
+  :global(html.nav-entering) #page-header #nav,
+  :global(html.nav-entering) #nav :is(#blog-info, .menu-link, .menu-item) {
+    transition: none;
   }
   @media (max-width: 768px) {
     #nav { padding: 0 12px; font-size: 1.15em; }
