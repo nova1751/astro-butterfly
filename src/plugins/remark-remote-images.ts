@@ -1,15 +1,17 @@
-import type { Root, Image, Html } from 'mdast';
+import type { Root, Image } from 'mdast';
 import { visit } from 'unist-util-visit';
 import { isOptimizableRemote, resolveRemoteImage } from '../lib/remote-image';
-
-const esc = (s: string) => s.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
 
 /**
  * Markdown images on the allowed image hosts are optimised by Astro (AVIF/WebP,
  * width/height, lazy). Astro fails the whole build if one of them can't be
  * fetched, so check them first:
  *  - reachable: point at the final URL (see remote-image.ts for why)
- *  - unreachable: emit a plain <img> with the original URL, which Astro skips
+ *  - unreachable: keep the original URL but take the node out of Astro's
+ *    hands. Astro only collects `image` nodes; an `unoptimizedImage` node with
+ *    hName 'img' still becomes a real <img> element, so rehype-content gives it
+ *    the lightbox link and alt-text caption like any other image. (A raw HTML
+ *    string would be invisible to rehype plugins and lose both.)
  */
 export default function remarkRemoteImages() {
   return async (tree: Root) => {
@@ -24,8 +26,11 @@ export default function remarkRemoteImages() {
           node.url = final;
           return;
         }
-        const html: Html = { type: 'html', value: `<img src="${esc(node.url)}" alt="${esc(node.alt ?? '')}" loading="lazy" decoding="async">` };
-        parent.children[index] = html;
+        parent.children[index] = {
+          type: 'unoptimizedImage',
+          position: node.position,
+          data: { hName: 'img', hProperties: { src: node.url, alt: node.alt ?? '', ...(node.title ? { title: node.title } : {}) } },
+        };
       }),
     );
   };
