@@ -9,6 +9,7 @@ import rehypeKatex from 'rehype-katex';
 import remarkAlerts from './src/plugins/remark-alerts.ts';
 import remarkDirectives from './src/plugins/remark-directives.ts';
 import remarkReading from './src/plugins/remark-reading.ts';
+import remarkMermaid from './src/plugins/remark-mermaid.ts';
 import remarkRemoteImages from './src/plugins/remark-remote-images.ts';
 import { IMAGE_HOSTS } from './src/lib/remote-image.ts';
 import rehypeContent from './src/plugins/rehype-content.ts';
@@ -30,7 +31,7 @@ export default defineConfig({
   markdown: {
     processor: unified({
       smartypants: false,
-      remarkPlugins: [remarkMath, remarkDirective, remarkDirectives, remarkAlerts, remarkReading, remarkRemoteImages],
+      remarkPlugins: [remarkMath, remarkDirective, remarkDirectives, remarkMermaid, remarkAlerts, remarkReading, remarkRemoteImages],
       rehypePlugins: [[rehypeKatex, { strict: false, throwOnError: false }], [rehypeContent, { base: process.env.BASE_PATH || site.base }]],
     }),
   },

@@ -17,6 +17,7 @@ import { initPowerMode } from './power-mode';
 import { initLoadBar } from './load-bar';
 import { initTranslate } from './translate';
 import { initStats } from './stats';
+import { initMermaid } from './mermaid';
 
 initPersistStyles(); // must run before any library injects CSS
 initLoadBar(); // first, so a slow first load shows progress as early as possible
@@ -31,6 +32,7 @@ document.addEventListener('astro:page-load', () => {
   onPageScroll();
   initToc();
   initContent();
+  initMermaid();
   initMusic();
   initClock();
   initComments();

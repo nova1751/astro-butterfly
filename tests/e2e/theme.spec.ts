@@ -41,6 +41,16 @@ test('post page: meta, TOC and every tag plugin render', async ({ page }) => {
   }
 });
 
+test('mermaid diagrams draw and follow the theme', async ({ page }) => {
+  await page.goto('/posts/2b3c4d5e/');
+  const diagram = page.locator('.mermaid-diagram').first();
+  await diagram.scrollIntoViewIfNeeded();
+  await expect(diagram.locator('svg')).toBeVisible({ timeout: 20_000 });
+  await expect(diagram).toHaveAttribute('data-rendered', 'default');
+  await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark'));
+  await expect(diagram).toHaveAttribute('data-rendered', 'dark', { timeout: 10_000 });
+});
+
 test('tabs switch by click and arrow keys', async ({ page }) => {
   await page.goto(TAGS_POST);
   const tabs = page.locator('.tabs').first();

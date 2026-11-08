@@ -26,6 +26,7 @@ A blog theme for [Astro](https://astro.build) with the look of [hexo-theme-butte
 - Atom feed, `sitemap.xml` and `sitemap.txt`, `robots.txt`, a web app manifest, Open Graph tags and canonical URLs.
 - KaTeX maths, image lightbox, image captions taken from alt text, reading time and word count, and a notice on outdated posts.
 - "Last updated" dates follow git, so you never edit them by hand. Bulk reformatting commits can be excluded through `.git-blame-ignore-revs`.
+- [Mermaid](https://mermaid.js.org/) diagrams in fenced code blocks, following the light or dark theme.
 - A Simplified ⇄ Traditional Chinese switch, a top progress bar that appears only on slow loads, and Butterfly's typing sparks.
 
 **Optional services**, each switched on by filling in a key
@@ -36,7 +37,7 @@ A blog theme for [Astro](https://astro.build) with the look of [hexo-theme-butte
 
 **Small and robust in the browser**
 - About 19 KB of gzipped JavaScript runs on first load: client-side navigation, prefetching and the theme behaviour.
-- Everything else loads only when it's used. Twikoo loads as the comments come into view, PhotoSwipe on the first image click, Pagefind when search opens, APlayer when music is configured, and the conversion table on the first switch to Traditional Chinese.
+- Everything else loads only when it's used. Twikoo loads as the comments come into view, PhotoSwipe on the first image click, Pagefind when search opens, APlayer when music is configured, Mermaid as a diagram comes near, and the conversion table on the first switch to Traditional Chinese.
 - Pages stay readable without JavaScript, and a slow or failing third-party service never breaks the page.
 - Keyboard and screen reader support: tabs use arrow keys, focus states are visible, and the theme respects `prefers-reduced-motion`.
 

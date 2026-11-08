@@ -163,6 +163,27 @@
 
   /* notes, tips, folding, tabs, span, checkbox, psw, bubble, site card → tag-plugins.css */
 
+  /* ---- mermaid diagrams (scripts/mermaid.ts) ---- */
+  /* The source holds the space until the drawing replaces it; it stays readable
+     without JavaScript and when a diagram can't be drawn. */
+  .mermaid-diagram {
+    margin: 0 0 20px;
+    overflow-x: auto;
+    text-align: center;
+    white-space: pre;
+    line-height: 1.5;
+  }
+  .mermaid-diagram[data-rendered] { white-space: normal; line-height: normal; }
+  .mermaid-diagram[data-failed] {
+    padding: 12px 16px;
+    border-left: 3px solid var(--theme-color);
+    text-align: left;
+    color: var(--muted);
+  }
+  @media (scripting: enabled) {
+    .mermaid-diagram:not([data-rendered], [data-failed]) { color: transparent; }
+  }
+
   /* ---- music embeds (music page) ---- */
   /* Reserve the loaded player's height (body + list + borders) so the page
      doesn't jump when it appears: 24-row (791px) list on desktop (EMBED_LIST_HEIGHT in

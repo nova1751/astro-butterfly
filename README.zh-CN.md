@@ -36,7 +36,7 @@
 
 **浏览器端又轻又稳**
 - 首次加载只运行约 19 KB（gzip 后）的 JS，包括无刷新跳转、链接预取和主题交互。
-- 其余功能用到时才加载：Twikoo 在评论区快进入视野时加载，PhotoSwipe 在第一次点击图片时加载，Pagefind 在打开搜索时加载，APlayer 只在配置了歌单后加载，简繁对照表在第一次切换到繁体时加载。
+- 其余功能用到时才加载：Twikoo 在评论区快进入视野时加载，PhotoSwipe 在第一次点击图片时加载，Pagefind 在打开搜索时加载，APlayer 只在配置了歌单后加载，Mermaid 在图表快进入视野时加载，简繁对照表在第一次切换到繁体时加载。
 - 不开 JS 也能正常阅读；第三方服务很慢或出错时，页面照常可用。
 - 支持键盘和读屏：标签页可以用方向键切换，焦点清晰可见，并遵循系统的"减少动态效果"设置。
 
@@ -103,7 +103,7 @@ cover: /img/covers/1.svg
 ---
 ```
 
-除了标准的 GitHub 风格 Markdown，还支持 GitHub 提示块（`> [!TIP]`）、数学公式（`$…$`、`$$…$$`），以及用来书写 Butterfly 标签外挂的指令语法：
+除了标准的 GitHub 风格 Markdown，还支持 GitHub 提示块（`> [!TIP]`）、数学公式（`$…$`、`$$…$$`）、Mermaid 图表（` ```mermaid ` 代码块），以及用来书写 Butterfly 标签外挂的指令语法：
 
 ```md
 :::note{.blue .flat icon="fas fa-bullhorn"}

@@ -6,7 +6,7 @@ abbrlink: 2b3c4d5e
 tags: [指南, Markdown]
 categories: [开始]
 cover: /img/covers/2.svg
-description: 标题、列表、表格、引用、图片说明、数学公式等基础排版在主题中的效果。
+description: 标题、列表、表格、引用、图片说明、数学公式、Mermaid 图表等基础排版在主题中的效果。
 ---
 
 这篇文章展示基础排版。标题会自动生成目录（右侧侧栏，手机上在右下角按钮里），并带有可直接分享的锚点。
@@ -50,6 +50,27 @@ description: 标题、列表、表格、引用、图片说明、数学公式等�
 $$
 \int_{-\infty}^{\infty} e^{-x^2}\,dx = \sqrt{\pi}
 $$
+
+## 图表
+
+用 `mermaid` 代码块画图，图表会跟随深浅色模式切换。流程图：
+
+```mermaid
+flowchart LR
+  A[写文章] --> B{本地预览}
+  B -->|没问题| C[发布]
+  B -->|要修改| A
+```
+
+时序图：
+
+```mermaid
+sequenceDiagram
+  访客->>博客: 打开文章
+  博客-->>访客: 返回页面
+  访客->>博客: 滚动到图表附近
+  博客-->>访客: 加载 Mermaid 并绘制
+```
 
 ## 脚注
 

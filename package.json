@@ -44,6 +44,7 @@
     "katex": "0.19.1",
     "lxgw-wenkai-screen-webfont": "1.7.0",
     "mdast-util-to-string": "4.0.0",
+    "mermaid": "^12.3.0",
     "photoswipe": "5.4.4",
     "rehype-katex": "7.0.1",
     "remark-directive": "4.0.0",
@@ -63,9 +64,9 @@
     "@types/mdast": "4.0.4",
     "mdast-util-directive": "3.2.0",
     "pagefind": "1.6.0",
+    "subset-font": "2.4.0",
     "typescript": "6.0.3",
-    "vitest": "5.1.0",
-    "subset-font": "2.4.0"
+    "vitest": "5.1.0"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
