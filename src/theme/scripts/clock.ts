@@ -175,13 +175,34 @@ export function initClock() {
     el.querySelectorAll<HTMLElement>('[data-wx-weather], [data-wx-wind], [data-wx-humidity], [data-wx-city]').forEach((n) => (n.hidden = true));
     return;
   }
-  locate(el)
-    .then((place) => {
-      setCity(el, place.city);
-      return fetchWeather(el, place);
-    })
-    .then((w) => renderWeather(el, w))
-    .catch(() => {
-      el.querySelector('[data-wx-text]')!.textContent = '天气暂不可用';
-    });
+
+  const startWeather = () => {
+    locate(el)
+      .then((place) => {
+        setCity(el, place.city);
+        return fetchWeather(el, place);
+      })
+      .then((w) => renderWeather(el, w))
+      .catch(() => {
+        el.querySelector('[data-wx-text]')!.textContent = '天气暂不可用';
+      });
+  };
+
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          io.disconnect();
+          startWeather();
+        }
+      },
+      { rootMargin: '300px 0px' },
+    );
+    // The card is transition:persist and initClock() won't run again for it, so
+    // keep observing across navigations: on phones it is far down the page and
+    // may only scroll into view on a later one.
+    io.observe(el);
+  } else {
+    startWeather();
+  }
 }

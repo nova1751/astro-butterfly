@@ -51,7 +51,7 @@ const buildDate = formatDate(new Date());
 <aside id="aside-content" aria-label="侧栏">
   <section class="card card-widget card-info">
     <div class="avatar-img">
-      <img src={avatar.src} srcset={avatar.srcset} alt={site.author} width="110" height="110" />
+      <img src={avatar.src} srcset={avatar.srcset} alt={site.author} width="110" height="110" decoding="async" />
     </div>
     <div class="author-info__name">{site.author}</div>
     <div class="author-info__description">{site.description}</div>

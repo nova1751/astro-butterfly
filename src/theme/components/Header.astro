@@ -97,7 +97,7 @@ const [posts, tags, cats, top, logo, avatar] = await Promise.all([
 <div id="sidebar" class="sidebar" hidden>
   <div class="sidebar-mask" data-sidebar-close></div>
   <div class="sidebar-menus" role="dialog" aria-modal="true" aria-label="菜单">
-    <div class="avatar-img"><img src={avatar.src} srcset={avatar.srcset} alt={site.author} width="110" height="110" loading="lazy" /></div>
+    <div class="avatar-img"><img src={avatar.src} srcset={avatar.srcset} alt={site.author} width="110" height="110" loading="lazy" decoding="async" /></div>
     <div class="sidebar-site-data">
       <a href={url('/archives/')}><span class="headline">文章</span><span class="length-num">{posts.length}</span></a>
       <a href={url('/tags/')}><span class="headline">标签</span><span class="length-num">{tags.length}</span></a>
