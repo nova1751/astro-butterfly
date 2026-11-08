@@ -166,7 +166,7 @@ export function initMusic() {
     document.addEventListener('pointerover', (e) => {
       if ((e.target as Element).closest?.('[data-music-start]')) warmUp();
     });
-    // A tap or click elsewhere folds the playlist and the player away. `click`,
+    // A tap or click elsewhere folds the player, and an open playlist with it. `click`,
     // not `pointerdown`: a touch that turns into a scroll fires no click, so
     // scrolling the page while listening leaves the player open.
     document.addEventListener('click', (e) => {
@@ -189,13 +189,17 @@ export function initMusic() {
   initEmbeds();
 }
 
-/** Fold the global playlist and the player (`stepwise`: only the playlist if it is open). */
-function collapseGlobal(stepwise: boolean) {
+/**
+ * Fold the global player. An open playlist folds with it and comes back when
+ * the player reopens (MusicPlayer.astro); `listFirst` closes the list for good
+ * instead, leaving the player open.
+ */
+function collapseGlobal(listFirst: boolean) {
   const el = document.querySelector<HTMLElement>('#global-music.aplayer');
   if (!el) return;
-  if (!el.querySelector('.aplayer-list')?.classList.contains('aplayer-list-hide')) {
+  if (listFirst && !el.classList.contains('aplayer-narrow') && !el.querySelector('.aplayer-list')?.classList.contains('aplayer-list-hide')) {
     el.querySelector<HTMLElement>('.aplayer-icon-menu')?.click();
-    if (stepwise) return;
+    return;
   }
   if (!el.classList.contains('aplayer-narrow')) el.querySelector<HTMLElement>('.aplayer-miniswitcher')?.click();
 }

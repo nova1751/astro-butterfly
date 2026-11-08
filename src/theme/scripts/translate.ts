@@ -131,7 +131,10 @@ function watch() {
 }
 
 function syncButton() {
-  root.lang = script === 'hant' ? 'zh-TW' : 'zh-CN';
+  // Only when it changes: any write re-matches :lang for the whole page, a full
+  // style pass on every load (~0.2 s on a phone-class CPU on a long post).
+  const lang = script === 'hant' ? 'zh-TW' : 'zh-CN';
+  if (root.lang !== lang) root.lang = lang;
   document.querySelectorAll<HTMLButtonElement>('[data-translate]').forEach((b) => {
     // shows what a click switches to, like Butterfly (繁 / 簡)
     b.textContent = script === 'hant' ? '簡' : '繁';
