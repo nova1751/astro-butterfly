@@ -98,19 +98,19 @@ import { music } from '@/config';
   :root .aplayer .aplayer-lrc p.aplayer-lrc-current { color: var(--theme-color); font-weight: 600; }
   :root .aplayer {
     --ap-lyric-halo: rgba(255, 255, 255, 0.6);
-    /* frosted lyric pill (fixed player) */
-    --ap-glass-bg: rgba(255, 255, 255, 0.72);
-    --ap-glass-solid: rgba(255, 255, 255, 0.92);
-    --ap-glass-edge: rgba(255, 255, 255, 0.7);
-    --ap-glass-shadow: 0 4px 16px rgba(7, 17, 27, 0.08);
+    /* liquid frosted lyric pill (fixed player) */
+    --ap-glass-bg: rgba(255, 255, 255, 0.68);
+    --ap-glass-solid: rgba(255, 255, 255, 0.95);
+    --ap-glass-edge: rgba(255, 255, 255, 0.6);
+    --ap-glass-shadow: 0 8px 24px -4px rgba(7, 17, 27, 0.08), 0 2px 6px -1px rgba(7, 17, 27, 0.04), inset 0 1px 1px 0 rgba(255, 255, 255, 0.9), inset 0 -1px 1px 0 rgba(7, 17, 27, 0.04);
   }
   :root[data-theme='dark'] .aplayer {
     --ap-lyric-muted: #929aa6;
     --ap-lyric-halo: rgba(0, 0, 0, 0.5);
-    --ap-glass-bg: rgba(24, 24, 27, 0.6);
-    --ap-glass-solid: rgba(24, 24, 27, 0.92);
-    --ap-glass-edge: rgba(255, 255, 255, 0.1);
-    --ap-glass-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    --ap-glass-bg: rgba(22, 24, 29, 0.72);
+    --ap-glass-solid: rgba(22, 24, 29, 0.95);
+    --ap-glass-edge: rgba(255, 255, 255, 0.12);
+    --ap-glass-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.45), 0 2px 6px -1px rgba(0, 0, 0, 0.25), inset 0 1px 1px 0 rgba(255, 255, 255, 0.15), inset 0 -1px 1px 0 rgba(0, 0, 0, 0.3);
   }
 
   :root .music-embed.aplayer { box-sizing: border-box; width: 100%; }
@@ -204,22 +204,30 @@ import { music } from '@/config';
     left: 50%;
     right: auto;
     bottom: calc(74px + env(safe-area-inset-bottom));
-    /* A frosted pill as wide as the song's longest line (the lines scroll inside
-       it, so the width only changes with the song), up to 80% of the screen. */
+    /* A liquid-glass pill as wide as the song's longest line (the lines scroll
+       inside it, so the width only changes with the song), up to 80% of the screen. */
     width: fit-content;
-    max-width: min(80vw, 960px);
+    max-width: min(80vw, 800px);
     height: auto;
     margin: 0;
-    padding: 6px 16px;
+    padding: 6px 18px;
     border: 1px solid var(--ap-glass-edge);
-    border-radius: 999px;
+    border-radius: 9999px;
     background: var(--ap-glass-bg);
-    -webkit-backdrop-filter: saturate(1.4) blur(12px);
-    backdrop-filter: saturate(1.4) blur(12px);
+    -webkit-backdrop-filter: blur(16px) saturate(1.8);
+    backdrop-filter: blur(16px) saturate(1.8);
     box-shadow: var(--ap-glass-shadow);
     text-shadow: 0 1px 1px var(--ap-lyric-halo);
     transform: translateX(-50%);
     pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  /* Fade out on an empty (instrumental) line, and while the playlist is open:
+     the list rises above the player and the pill would sit on top of it. */
+  :root .aplayer.aplayer-fixed .aplayer-lrc:has(p.aplayer-lrc-current:empty),
+  :root .aplayer.aplayer-fixed:has(.aplayer-list:not(.aplayer-list-hide)) .aplayer-lrc {
+    opacity: 0;
+    transform: translateX(-50%) translateY(8px) scale(0.95);
   }
   @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
     :root .aplayer.aplayer-fixed .aplayer-lrc { background: var(--ap-glass-solid); }
@@ -245,8 +253,10 @@ import { music } from '@/config';
     left: -66px !important; /* APlayer sets `left` inline */
     transition: left 0.3s;
   }
-  :root .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body:hover {
-    left: 0 !important;
+  @media (hover: hover) {
+    :root .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body:hover {
+      left: 0 !important;
+    }
   }
   :root .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body:has(:focus-visible) {
     left: 0 !important;
@@ -264,6 +274,18 @@ import { music } from '@/config';
     }
     :root .aplayer.aplayer-fixed .aplayer-body {
       bottom: env(safe-area-inset-bottom);
+    }
+    :root .aplayer.aplayer-fixed .aplayer-lrc {
+      /* Safe distance from mobile browser toolbar & safe area */
+      bottom: calc(82px + env(safe-area-inset-bottom));
+      /* Constrain width so it leaves safe margins from left switcher and rightside buttons */
+      max-width: min(calc(100vw - 110px), 320px);
+      padding: 4px 14px;
+      font-size: 12px;
+    }
+    :root .aplayer.aplayer-fixed .aplayer-lrc p {
+      font-size: 12px;
+      line-height: 16px;
     }
   }
 </style>

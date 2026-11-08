@@ -166,6 +166,20 @@ export function initMusic() {
     document.addEventListener('pointerover', (e) => {
       if ((e.target as Element).closest?.('[data-music-start]')) warmUp();
     });
+    // A tap or click elsewhere folds the playlist and the player away. `click`,
+    // not `pointerdown`: a touch that turns into a scroll fires no click, so
+    // scrolling the page while listening leaves the player open.
+    document.addEventListener('click', (e) => {
+      const target = e.target as Element | null;
+      if (!target?.isConnected || target.closest('#global-music, [data-music-start]')) return;
+      collapseGlobal(false);
+    });
+    // Escape folds the playlist first, then the player; left to dialogs and text fields.
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape' || e.defaultPrevented || document.querySelector('dialog[open]')) return;
+      if ((e.target as Element | null)?.closest?.('input, textarea, select, [contenteditable]')) return;
+      collapseGlobal(true);
+    });
     warmUpWhenIdle();
     document.addEventListener('astro:before-swap', () => {
       pagePlayers.forEach((p) => p.destroy());
@@ -173,6 +187,17 @@ export function initMusic() {
     });
   }
   initEmbeds();
+}
+
+/** Fold the global playlist and the player (`stepwise`: only the playlist if it is open). */
+function collapseGlobal(stepwise: boolean) {
+  const el = document.querySelector<HTMLElement>('#global-music.aplayer');
+  if (!el) return;
+  if (!el.querySelector('.aplayer-list')?.classList.contains('aplayer-list-hide')) {
+    el.querySelector<HTMLElement>('.aplayer-icon-menu')?.click();
+    if (stepwise) return;
+  }
+  if (!el.classList.contains('aplayer-narrow')) el.querySelector<HTMLElement>('.aplayer-miniswitcher')?.click();
 }
 
 /** APlayer's SVG-only controls need names for keyboard and screen-reader users. */

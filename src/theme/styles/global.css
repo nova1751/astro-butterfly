@@ -304,7 +304,8 @@
     --toast-icon: var(--icon-checkmark);
     position: fixed;
     left: 50%;
-    bottom: calc(32px + env(safe-area-inset-bottom));
+    top: calc(var(--nav-height, 60px) + 16px + env(safe-area-inset-top));
+    bottom: auto;
     z-index: 200;
     display: flex;
     align-items: center;
@@ -322,7 +323,7 @@
     backdrop-filter: saturate(1.4) blur(12px);
     pointer-events: none;
     opacity: 0;
-    transform: translate(-50%, 12px) scale(0.96);
+    transform: translate(-50%, -12px) scale(0.96);
     transition: opacity 0.25s, transform 0.3s var(--ease);
   }
   #toast.is-visible {
@@ -354,7 +355,10 @@
   #toast[data-type='light'] { --toast-accent: #f59e0b; --toast-icon: var(--icon-sun); }
   #toast[data-type='dark'] { --toast-accent: #6366f1; --toast-icon: var(--icon-moon); }
   @media (max-width: 768px) {
-    #toast { bottom: calc(80px + env(safe-area-inset-bottom)); }
+    #toast {
+      top: calc(var(--nav-height, 50px) + 12px + env(safe-area-inset-top));
+      bottom: auto;
+    }
   }
 }
 
