@@ -1,5 +1,6 @@
 import aplayerCss from 'aplayer/dist/APlayer.min.css?url';
 import { loadStyle } from './load-style';
+import { load, save, toast } from './store';
 
 /**
  * APlayer + Meting API without the meting.js runtime.
@@ -20,6 +21,15 @@ type Track = { name?: string; title?: string; artist?: string; author?: string; 
 const EMBED_LIST_ROWS = 24;
 const EMBED_LIST_HEIGHT = EMBED_LIST_ROWS * 33 - 1;
 
+/** Public Meting instances limit requests per day, and a visitor rarely needs a fresher list. */
+const LIST_CACHE_DAYS = 1;
+/** After a refusal, wait this long before fetching ahead of a click again. A click always tries. */
+const WARM_UP_PAUSE_DAYS = 1 / 24;
+const WARM_UP_PAUSED = 'music-warm-up-paused';
+
+/** The API's own explanation, worth showing as is (e.g. its daily limit was reached). */
+class MetingRefusal extends Error {}
+
 let APlayer: APlayerCtor | undefined;
 let globalPlayer: APlayerInstance | undefined;
 let pagePlayers: APlayerInstance[] = [];
@@ -32,26 +42,36 @@ async function loadAPlayer() {
   return APlayer;
 }
 
-async function fetchList(api: string, server: string, type: string, id: string) {
+type Playlist = { name?: string; artist?: string; url: string; cover?: string; lrc?: string }[];
+
+async function fetchList(api: string, server: string, type: string, id: string): Promise<Playlist> {
+  const key = `music-list:${server}:${type}:${id}`;
+  const cached = load<Playlist>(key);
+  if (Array.isArray(cached) && cached.length) return cached;
   const url = api.replace(':server', server).replace(':type', type).replace(':id', id).replace(':r', String(Math.random()));
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Meting ${res.status}`);
-  const list = (await res.json()) as Track[];
-  return list.map((t) => ({
+  // Over its limit the API still answers 200, with { message } instead of a list.
+  const data = (await res.json()) as Track[] | { message?: string };
+  if (!Array.isArray(data)) throw new MetingRefusal(data.message ?? '没有返回歌单');
+  const list = data.map((t) => ({
     name: t.name ?? t.title,
     artist: t.artist ?? t.author,
     url: t.url,
     cover: t.pic ?? t.cover,
     lrc: t.lrc,
   }));
+  if (list.length) save(key, list, LIST_CACHE_DAYS);
+  return list;
 }
 
-let globalList: Promise<Awaited<ReturnType<typeof fetchList>>> | undefined;
+let globalList: Promise<Playlist> | undefined;
 
 /** The global playlist, fetched once per visit (a failed fetch is retried on the next call). */
 function getGlobalList(el: HTMLElement) {
   globalList ??= fetchList(el.dataset.api!, el.dataset.server!, el.dataset.type!, el.dataset.id!).catch((e) => {
     globalList = undefined;
+    save(WARM_UP_PAUSED, true, WARM_UP_PAUSE_DAYS);
     throw e;
   });
   return globalList;
@@ -61,7 +81,8 @@ function getGlobalList(el: HTMLElement) {
  * Idle until urgent: once the page has loaded and the browser is idle, fetch
  * what opening the player needs (APlayer's code and styles, the playlist from
  * the Meting API, which alone takes ~1 s), so a click only builds the player.
- * Skipped when the visitor asks to save data or is on a 2G connection.
+ * Skipped when the visitor asks to save data or is on a 2G connection. The playlist
+ * is cached, so this costs the API at most one request a day per browser.
  */
 function warmUp() {
   const el = document.querySelector<HTMLElement>('[data-global-music]');
@@ -69,7 +90,7 @@ function warmUp() {
   const conn = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
   if (conn?.saveData || /2g/.test(conn?.effectiveType ?? '')) return;
   loadAPlayer().catch(() => {});
-  getGlobalList(el).catch(() => {});
+  if (!load(WARM_UP_PAUSED)) getGlobalList(el).catch(() => {});
 }
 
 function warmUpWhenIdle() {
@@ -121,9 +142,10 @@ async function initGlobal() {
     exclusive(globalPlayer);
     el.dataset.state = 'ready';
     requestAnimationFrame(() => requestAnimationFrame(() => el.classList.remove('ap-init')));
-  } catch {
+  } catch (e) {
     el.dataset.state = '';
     if (trigger) { trigger.disabled = false; trigger.setAttribute('aria-label', '音乐加载失败，点击重试'); }
+    toast(e instanceof MetingRefusal ? `音乐服务：${e.message}` : '音乐加载失败，请稍后重试', 'error');
   }
 }
 
@@ -144,9 +166,10 @@ async function initEmbeds() {
         labelControls(el);
         exclusive(p);
         pagePlayers.push(p);
-      } catch {
+      } catch (e) {
         el.dataset.failed = '';
-        el.innerHTML = '歌单加载失败，<button type="button" class="hl-label">重试</button>';
+        el.innerHTML = '<span></span>，<button type="button" class="hl-label">重试</button>';
+        el.querySelector('span')!.textContent = e instanceof MetingRefusal ? `歌单加载失败：${e.message}` : '歌单加载失败';
         el.querySelector('button')?.addEventListener('click', () => initEmbeds(), { once: true });
       }
     }),
