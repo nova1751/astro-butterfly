@@ -11,6 +11,7 @@ type APlayerInstance = {
   destroy: () => void;
   pause: () => void;
   on: (ev: string, cb: () => void) => void;
+  list: { add: (audio: Playlist) => void };
 };
 type APlayerCtor = new (o: object) => APlayerInstance;
 type Track = { name?: string; title?: string; artist?: string; author?: string; url: string; pic?: string; cover?: string; lrc?: string };
@@ -79,10 +80,38 @@ function getGlobalList(el: HTMLElement) {
   return globalList;
 }
 
+let startIndex: number | undefined;
+/** Held so the decoded cover stays in memory until the player opens. */
+let startCover: HTMLImageElement | undefined;
+
+/** The track the global player opens on, chosen once so its cover can be ready first. */
+function pickStart(list: Playlist) {
+  startIndex ??= Math.floor(Math.random() * list.length);
+  return startIndex;
+}
+
+/**
+ * Fetch and decode the opening track's cover, so the player shows it from its first
+ * frame. Meting answers with an uncacheable redirect to the image, so the track keeps
+ * the final address: the cached image, with no further request to the API.
+ */
+async function preloadStartCover(list: Playlist) {
+  const track = list[pickStart(list)];
+  if (!track?.cover || startCover) return;
+  const res = await fetch(track.cover);
+  await res.body?.cancel();
+  const image = new Image();
+  image.src = res.url;
+  await image.decode();
+  startCover = image;
+  track.cover = res.url;
+}
+
 /**
  * Idle until urgent: once the page has loaded and the browser is idle, fetch
  * what opening the player needs (APlayer's code and styles, the playlist from
- * the Meting API, which alone takes ~1 s), so a click only builds the player.
+ * the Meting API, which alone takes ~1 s, the opening track's cover), so a click
+ * only builds the player.
  * Skipped when the visitor asks to save data or is on a 2G connection. The playlist
  * is cached, so this costs the API at most one request a day per browser.
  */
@@ -92,7 +121,7 @@ function warmUp() {
   const conn = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
   if (conn?.saveData || /2g/.test(conn?.effectiveType ?? '')) return;
   loadAPlayer().catch(() => {});
-  if (!load(WARM_UP_PAUSED)) getGlobalList(el).catch(() => {});
+  if (!load(WARM_UP_PAUSED)) getGlobalList(el).then(preloadStartCover).catch(() => {});
 }
 
 function warmUpWhenIdle() {
@@ -113,7 +142,8 @@ async function initGlobal() {
   const trigger = el.querySelector<HTMLButtonElement>('[data-music-start]');
   if (trigger) trigger.disabled = true;
   try {
-    const [Ctor, audio] = await Promise.all([loadAPlayer(), getGlobalList(el)]);
+    const [Ctor, list] = await Promise.all([loadAPlayer(), getGlobalList(el)]);
+    const start = pickStart(list);
     // APlayer builds the player full width and then collapses it; without this
     // the collapse plays as a 0.3s animation on every first load.
     el.classList.add('ap-init');
@@ -126,8 +156,12 @@ async function initGlobal() {
       volume: 0.55,
       theme: 'var(--theme-color)',
       lrcType: 3,
-      audio,
+      // Opens on the only track it has; adding the rest doesn't change track, and
+      // they still join the random order.
+      audio: list.slice(start, start + 1),
     });
+    const rest = [...list.slice(0, start), ...list.slice(start + 1)];
+    if (rest.length) globalPlayer.list.add(rest);
     labelControls(el);
     trigger?.remove();
     el.querySelector<HTMLButtonElement>('.aplayer-miniswitcher')?.click();
