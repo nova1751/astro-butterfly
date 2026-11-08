@@ -96,8 +96,22 @@ import { music } from '@/config';
   :root .aplayer .aplayer-lrc p { font-size: 13px; color: var(--ap-lyric-muted); opacity: 1; }
   /* current line in the accent, like the played bar and the active list item */
   :root .aplayer .aplayer-lrc p.aplayer-lrc-current { color: var(--theme-color); font-weight: 600; }
-  :root .aplayer { --ap-lyric-halo: rgba(255, 255, 255, 0.6); }
-  :root[data-theme='dark'] .aplayer { --ap-lyric-muted: #929aa6; --ap-lyric-halo: rgba(0, 0, 0, 0.5); }
+  :root .aplayer {
+    --ap-lyric-halo: rgba(255, 255, 255, 0.6);
+    /* frosted lyric pill (fixed player) */
+    --ap-glass-bg: rgba(255, 255, 255, 0.72);
+    --ap-glass-solid: rgba(255, 255, 255, 0.92);
+    --ap-glass-edge: rgba(255, 255, 255, 0.7);
+    --ap-glass-shadow: 0 4px 16px rgba(7, 17, 27, 0.08);
+  }
+  :root[data-theme='dark'] .aplayer {
+    --ap-lyric-muted: #929aa6;
+    --ap-lyric-halo: rgba(0, 0, 0, 0.5);
+    --ap-glass-bg: rgba(24, 24, 27, 0.6);
+    --ap-glass-solid: rgba(24, 24, 27, 0.92);
+    --ap-glass-edge: rgba(255, 255, 255, 0.1);
+    --ap-glass-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  }
 
   :root .music-embed.aplayer { box-sizing: border-box; width: 100%; }
 
@@ -189,18 +203,26 @@ import { music } from '@/config';
     box-sizing: border-box;
     left: 50%;
     right: auto;
-    bottom: calc(80px + env(safe-area-inset-bottom));
-    /* Desktop-lyrics style (APlayer / NetEase / QQ Music): no panel, just text. One crisp
-       1px shadow keeps the glyph edges readable without a visible glow. */
-    width: min(80vw, 960px);
-    height: 16px;
+    bottom: calc(74px + env(safe-area-inset-bottom));
+    /* A frosted pill as wide as the song's longest line (the lines scroll inside
+       it, so the width only changes with the song), up to 80% of the screen. */
+    width: fit-content;
+    max-width: min(80vw, 960px);
+    height: auto;
     margin: 0;
-    padding: 0;
-    border: 0;
-    background: transparent;
+    padding: 6px 16px;
+    border: 1px solid var(--ap-glass-edge);
+    border-radius: 999px;
+    background: var(--ap-glass-bg);
+    -webkit-backdrop-filter: saturate(1.4) blur(12px);
+    backdrop-filter: saturate(1.4) blur(12px);
+    box-shadow: var(--ap-glass-shadow);
     text-shadow: 0 1px 1px var(--ap-lyric-halo);
     transform: translateX(-50%);
     pointer-events: none;
+  }
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    :root .aplayer.aplayer-fixed .aplayer-lrc { background: var(--ap-glass-solid); }
   }
   :root .aplayer.aplayer-fixed .aplayer-lrc p {
     overflow: hidden;
