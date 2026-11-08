@@ -129,6 +129,11 @@ import { music } from '@/config';
     content-visibility: auto;
     contain-intrinsic-block-size: auto 300px;
   }
+  /* Laid out as soon as the list opens: APlayer scrolls to the current track right
+     then, which does nothing while the rows are skipped. */
+  :root #global-music .aplayer-list:not(.aplayer-list-hide) ol {
+    content-visibility: visible;
+  }
 
   :root .aplayer .aplayer-list ol li {
     display: flex;

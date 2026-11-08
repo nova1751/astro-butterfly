@@ -11,7 +11,7 @@ type APlayerInstance = {
   destroy: () => void;
   pause: () => void;
   on: (ev: string, cb: () => void) => void;
-  list: { add: (audio: Playlist) => void };
+  list: { add: (audio: Playlist) => void; switch: (index: number) => void };
 };
 type APlayerCtor = new (o: object) => APlayerInstance;
 type Track = { name?: string; title?: string; artist?: string; author?: string; url: string; pic?: string; cover?: string; lrc?: string };
@@ -156,12 +156,16 @@ async function initGlobal() {
       volume: 0.55,
       theme: 'var(--theme-color)',
       lrcType: 3,
-      // Opens on the only track it has; adding the rest doesn't change track, and
-      // they still join the random order.
-      audio: list.slice(start, start + 1),
+      audio: [],
     });
-    const rest = [...list.slice(0, start), ...list.slice(start + 1)];
-    if (rest.length) globalPlayer.list.add(rest);
+    // Given tracks, APlayer starts on a random one of its own, fetching its cover and
+    // lyrics. Hold that back and start on ours: the list keeps its order, and every
+    // track still joins the random order.
+    const playerList = globalPlayer.list;
+    playerList.switch = () => {};
+    playerList.add(list);
+    delete (playerList as Partial<typeof playerList>).switch; // back to APlayer's own
+    playerList.switch(start);
     labelControls(el);
     trigger?.remove();
     el.querySelector<HTMLButtonElement>('.aplayer-miniswitcher')?.click();
