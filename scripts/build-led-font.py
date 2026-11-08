@@ -20,7 +20,7 @@ from fontTools.ttLib import TTFont
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "scripts/assets/UnidreamLED.ttf"
 OUT = ROOT / "src/assets/fonts/unidream-led.woff2"
-TEXT = "0123456789:-./ %APMSUNMOTUEWEDTHUFRISAT"
+TEXT = "0123456789:-./ %°CAPMSUNMOTUEWEDTHUFRISAT"
 
 font = TTFont(SRC)
 cmap = font.getBestCmap()
@@ -42,6 +42,31 @@ for name in digits:
         coords.translate((dx, 0))
     glyph.recalcBounds(glyf)
     hmtx[name] = (advance, lsb + dx)
+
+# The font maps U+00B0 to an empty glyph (no outline, 851 wide), so "-15°C"
+# showed a blank gap. Draw a seven-segment style degree: a small ring of four
+# separate bars at cap height, with the digits' side bearing and a narrow advance.
+from fontTools.pens.ttGlyphPen import TTGlyphPen
+
+SIDE, TOP, BOX, BAR, GAP = 57, 1434, 520, 170, 40
+x0, x1, y0, y1 = SIDE, SIDE + BOX, TOP - BOX, TOP
+pen = TTGlyphPen(None)
+for (left, bottom, right, top) in (
+    (x0 + GAP, y1 - BAR, x1 - GAP, y1),  # top bar
+    (x0 + GAP, y0, x1 - GAP, y0 + BAR),  # bottom bar
+    (x0, y0 + BAR + GAP, x0 + BAR, y1 - BAR - GAP),  # left bar
+    (x1 - BAR, y0 + BAR + GAP, x1, y1 - BAR - GAP),  # right bar
+):
+    # clockwise = filled outline in TrueType
+    pen.moveTo((left, bottom))
+    pen.lineTo((left, top))
+    pen.lineTo((right, top))
+    pen.lineTo((right, bottom))
+    pen.closePath()
+degree = cmap[0xB0]
+glyf[degree] = pen.glyph()
+glyf[degree].recalcBounds(glyf)
+hmtx[degree] = (x1 + SIDE, SIDE)
 
 options = Options()
 options.flavor = "woff2"

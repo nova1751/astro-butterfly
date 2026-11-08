@@ -35,8 +35,10 @@
     width: 0.9em;
     height: 1em;
     background: #fc6;
-    -webkit-mask: var(--icon-bolt) center / contain no-repeat;
-    mask: var(--icon-bolt) center / contain no-repeat;
+    -webkit-mask: var(--icon-bolt) no-repeat center;
+    -webkit-mask-size: contain;
+    mask: var(--icon-bolt) no-repeat center;
+    mask-size: contain;
     transition: background 0.2s ease-out;
   }
   .article-container :is(h1, h2, h3, h4, h5, h6):hover { padding-left: 34px; }
@@ -57,8 +59,10 @@
     margin-left: 8px;
     vertical-align: -0.05em;
     background: var(--theme-color);
-    -webkit-mask: var(--icon-link) center / contain no-repeat;
-    mask: var(--icon-link) center / contain no-repeat;
+    -webkit-mask: var(--icon-link) no-repeat center;
+    -webkit-mask-size: contain;
+    mask: var(--icon-link) no-repeat center;
+    mask-size: contain;
     opacity: 0;
     transition: opacity 0.2s;
   }
@@ -111,8 +115,10 @@
     height: 22px;
     padding: 0 5px;
     background: var(--hr-before-color);
-    -webkit-mask: var(--icon-scissors) center / 18px no-repeat;
-    mask: var(--icon-scissors) center / 18px no-repeat;
+    -webkit-mask: var(--icon-scissors) no-repeat center;
+    -webkit-mask-size: 18px 18px;
+    mask: var(--icon-scissors) no-repeat center;
+    mask-size: 18px 18px;
     transition: left 1s ease-in-out;
   }
   .article-container hr:hover::before { left: calc(95% - 20px); }
@@ -254,11 +260,14 @@
 }
 .article-container .expressive-code .code-actions button::before {
   content: '';
+  display: block;
   width: 14px;
   height: 14px;
   background: currentColor;
-  -webkit-mask: var(--btn-icon) center / contain no-repeat;
-  mask: var(--btn-icon) center / contain no-repeat;
+  -webkit-mask: var(--btn-icon) no-repeat center;
+  -webkit-mask-size: contain;
+  mask: var(--btn-icon) no-repeat center;
+  mask-size: contain;
   transition: transform 0.25s;
 }
 .article-container .expressive-code .code-actions .code-copy { --btn-icon: var(--icon-copy); }
@@ -313,8 +322,10 @@
   height: 16px;
   margin: 0 auto;
   background: currentColor;
-  -webkit-mask: var(--icon-angles-down) center / contain no-repeat;
-  mask: var(--icon-angles-down) center / contain no-repeat;
+  -webkit-mask: var(--icon-angles-down) no-repeat center;
+  -webkit-mask-size: contain;
+  mask: var(--icon-angles-down) no-repeat center;
+  mask-size: contain;
   transform: rotate(180deg);
   transition: transform 0.3s;
   animation: code-expand-key 1.2s infinite;

@@ -2,7 +2,8 @@
  * Build-time CSS icon masks for things rendered from Markdown (notes, tips,
  * headings…), so no icon font has to be shipped. Each icon becomes
  * `--icon-<name>: url("data:image/svg+xml,…")` on :root; use it with
- * `mask: var(--icon-x) center / contain no-repeat; background: currentColor`.
+ * `mask: var(--icon-x) no-repeat center; mask-size: contain; background: currentColor`
+ * (plus the -webkit- pair).
  */
 import { getIconData, iconToSVG, iconToHTML, replaceIDs } from '@iconify/utils';
 import solid from '@iconify-json/fa6-solid/icons.json' with { type: 'json' };
@@ -70,7 +71,11 @@ export function iconUri(spec: string) {
   const data = SETS[set] && getIconData(SETS[set], name);
   if (!data) throw new Error(`icon ${set}:${name} not found`);
   const { attributes, body } = iconToSVG(data, { height: 'auto' });
-  const svg = iconToHTML(replaceIDs(body), { ...attributes, xmlns: 'http://www.w3.org/2000/svg', fill: 'black' });
+  // iconToHTML already writes xmlns; passing it again duplicated the attribute, which makes
+  // the SVG malformed XML, so browsers dropped the mask image and the icon vanished.
+  // currentColor has no meaning inside a standalone image; spell the fill out.
+  const solidBody = replaceIDs(body).replaceAll('currentColor', 'black');
+  const svg = iconToHTML(solidBody, { ...attributes, fill: 'black' });
   return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 }
 

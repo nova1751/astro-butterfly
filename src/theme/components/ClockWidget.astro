@@ -6,6 +6,11 @@ import { clock } from '@/config';
   Clock + weather card (hexo-butterfly-clock, redrawn). Persisted across
   client-side navigations so the clock keeps ticking and weather isn't refetched.
   Logic: scripts/clock.ts. Font: scripts/build-led-font.py (tabular LED digits).
+
+  Fonts: every reading (date, time, AM/PM, temperature with its unit, humidity)
+  is set entirely in the LED face; words (weather, wind, city) in WenKai. One
+  reading never mixes the two, so rows line up by flex centring alone instead
+  of per-glyph offsets that drift between platforms' font rasterisers.
 -->
 <section
   class="card card-widget card-clock"
@@ -29,7 +34,7 @@ import { clock } from '@/config';
     <span class="clock-weather" data-wx-weather>
       <i class="clock-icon wx-icon" data-wx-icon aria-hidden="true"></i>
       <span data-wx-text>天气加载中</span>
-      <span class="clock-temp" data-wx-temp hidden><span class="clock-reading" data-wx-temp-value></span><span class="unit">°C</span></span>
+      <span class="clock-temp led" data-wx-temp hidden><span data-wx-temp-value></span>°C</span>
     </span>
   </div>
 
@@ -39,7 +44,7 @@ import { clock } from '@/config';
 
   <div class="clock-row clock-meta">
     <span class="clock-chip" data-wx-wind hidden><i class="clock-icon wind" aria-hidden="true"></i><span></span></span>
-    <span class="clock-chip" data-wx-humidity hidden><i class="clock-icon droplet" aria-hidden="true"></i><span class="clock-reading"></span></span>
+    <span class="clock-chip" data-wx-humidity hidden><i class="clock-icon droplet" aria-hidden="true"></i><span class="led"></span></span>
     <span class="clock-chip clock-city" data-wx-city><i class="clock-icon pin" aria-hidden="true"></i><span>定位中</span></span>
     <span class="clock-ampm led" data-clock-ampm>--</span>
   </div>
@@ -53,17 +58,6 @@ import { clock } from '@/config';
     /* same line box as LXGW WenKai (hhea .928 / .244), so mixed runs share one baseline */
     ascent-override: 92.8%;
     descent-override: 24.4%;
-    line-gap-override: 0%;
-  }
-  @font-face {
-    font-family: 'UnidreamLED Reading';
-    src: url('../../assets/fonts/unidream-led.woff2') format('woff2');
-    font-display: swap;
-    /* LED digits are 1434 units high; WenKai numerals are about 1520/2048.
-       Match that ink height and recenter the resized glyphs in the same line box. */
-    size-adjust: 106%;
-    ascent-override: 89.8%;
-    descent-override: 20.8%;
     line-gap-override: 0%;
   }
 </style>
@@ -85,13 +79,6 @@ import { clock } from '@/config';
   }
   .led {
     font-family: 'UnidreamLED', var(--code-font-family);
-  }
-  .clock-reading {
-    display: inline-block;
-    font-family: 'UnidreamLED Reading', var(--code-font-family);
-    line-height: inherit;
-    /* Optical alignment with WenKai's numeral/Celsius ink, not just its line box. */
-    transform: translateY(0.08em);
   }
   .clock-row {
     display: flex;
@@ -134,20 +121,12 @@ import { clock } from '@/config';
   }
   .clock-temp {
     flex: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 2px;
     color: var(--text-highlight-color);
   }
   .clock-temp[hidden],
   .clock-weather[hidden],
   .clock-chip[hidden] {
     display: none;
-  }
-  .clock-temp .unit {
-    display: inline-block;
-    font-size: inherit;
-    line-height: inherit;
   }
 
   .clock-time {
@@ -169,7 +148,6 @@ import { clock } from '@/config';
     color: var(--muted);
     font-size: 12px;
   }
-  .clock-meta .clock-reading { transform: translateY(0.16em); }
   .clock-chip {
     flex: none;
     display: inline-flex;
@@ -183,12 +161,20 @@ import { clock } from '@/config';
     width: 12px;
     height: 12px;
   }
-  .clock-city {
+  /* In a narrow aside (901-1024px) wind and city share what is left; wind gives
+     way first (its full text is in the title tooltip), so the city never
+     collapses to just its pin. */
+  .clock-city,
+  .clock-chip[data-wx-wind] {
     flex: 0 1 auto;
     min-width: 0;
     overflow: hidden;
   }
-  .clock-city > span {
+  .clock-chip[data-wx-wind] {
+    flex-shrink: 3;
+  }
+  .clock-city > span,
+  .clock-chip[data-wx-wind] > span {
     overflow: hidden;
     text-overflow: ellipsis;
   }

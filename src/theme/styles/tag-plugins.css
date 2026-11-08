@@ -51,8 +51,10 @@
     height: 1.15em;
     transform: translateY(-50%);
     background: var(--note-text);
-    -webkit-mask: var(--note-glyph) center / contain no-repeat;
-    mask: var(--note-glyph) center / contain no-repeat;
+    -webkit-mask: var(--note-glyph) no-repeat center;
+    -webkit-mask-size: contain;
+    mask: var(--note-glyph) no-repeat center;
+    mask-size: contain;
   }
   /* explicit icon: {% note blue 'fas fa-bullhorn' %} */
   .note.icon-padding { padding-left: 3em; }
@@ -65,8 +67,10 @@
     margin: 0;
     transform: translateY(-50%);
     background: var(--note-icon-color, currentColor);
-    -webkit-mask: var(--note-icon) center / contain no-repeat;
-    mask: var(--note-icon) center / contain no-repeat;
+    -webkit-mask: var(--note-icon) no-repeat center;
+    -webkit-mask-size: contain;
+    mask: var(--note-icon) no-repeat center;
+    mask-size: contain;
   }
   .note.icon-padding::before { content: none; }
 
@@ -168,8 +172,10 @@
   }
   .tip::after {
     background: #fff;
-    -webkit-mask: var(--tip-glyph) center / 12px 12px no-repeat;
-    mask: var(--tip-glyph) center / 12px 12px no-repeat;
+    -webkit-mask: var(--tip-glyph) no-repeat center;
+    -webkit-mask-size: 12px 12px;
+    mask: var(--tip-glyph) no-repeat center;
+    mask-size: 12px 12px;
   }
   .tip.info { background: linear-gradient(90deg, #20a0ff, #20b8ff); box-shadow: 0 3px 5px rgba(32, 160, 255, 0.5); }
   .tip.info::before { background: linear-gradient(0deg, #0092ff, #20b8ff); }
@@ -329,8 +335,10 @@
     width: 1em;
     height: 1em;
     background: currentColor;
-    -webkit-mask: var(--icon-arrow-up) center / contain no-repeat;
-    mask: var(--icon-arrow-up) center / contain no-repeat;
+    -webkit-mask: var(--icon-arrow-up) no-repeat center;
+    -webkit-mask-size: contain;
+    mask: var(--icon-arrow-up) no-repeat center;
+    mask-size: contain;
   }
   .tabs .tab-to-top:hover { color: var(--theme-color); }
   @keyframes tabshow {
