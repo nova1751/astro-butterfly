@@ -3,6 +3,7 @@
    Tokens come from the live site's Butterfly 4.9 CSS + source/css/custom.css
    ========================================================================= */
 
+/* Also declared inline at the top of <head> (Layout.astro), before any stylesheet. */
 @layer reset, tokens, base, layout, content, components, utilities;
 
 @layer reset {

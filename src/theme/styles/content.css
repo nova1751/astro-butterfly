@@ -165,10 +165,10 @@
 
   /* ---- music embeds (music page) ---- */
   /* Reserve the loaded player's height (body + list + borders) so the page
-     doesn't jump when it appears: 720px list on desktop (EMBED_LIST_HEIGHT in
+     doesn't jump when it appears: 24-row (791px) list on desktop (EMBED_LIST_HEIGHT in
      music.ts), 300px on phones (MusicPlayer.astro). */
   .music-embed { color: var(--muted); }
-  .music-embed:not(.aplayer, [data-failed]) { min-height: 812px; }
+  .music-embed:not(.aplayer, [data-failed]) { min-height: 883px; }
   @media (max-width: 768px) {
     .music-embed:not(.aplayer, [data-failed]) { min-height: 392px; }
   }

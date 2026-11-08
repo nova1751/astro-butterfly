@@ -16,7 +16,9 @@ type Track = { name?: string; title?: string; artist?: string; author?: string; 
 
 /** Embed playlist height on desktop (300px on phones, MusicPlayer.astro);
  * `.music-embed` reserves the matching space while loading (content.css). */
-const EMBED_LIST_HEIGHT = 720;
+/** Rows an embed playlist shows on desktop before it scrolls: 32px each plus a 1px divider. */
+const EMBED_LIST_ROWS = 24;
+const EMBED_LIST_HEIGHT = EMBED_LIST_ROWS * 33 - 1;
 
 let APlayer: APlayerCtor | undefined;
 let globalPlayer: APlayerInstance | undefined;

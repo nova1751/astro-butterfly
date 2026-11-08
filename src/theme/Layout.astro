@@ -50,6 +50,10 @@ const ogImage = new URL(url(image), Astro.site).href;
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    {/* Cascade layer order, ahead of every stylesheet: the first stylesheet to
+        name a layer fixes its priority, and route-split CSS (content.css on post
+        pages) can be linked before global.css. Keep in sync with global.css. */}
+    <style is:inline>@layer reset, tokens, base, layout, content, components, utilities;</style>
     <meta name="generator" content={Astro.generator} />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
