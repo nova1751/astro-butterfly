@@ -1,7 +1,5 @@
 import { toast } from './store';
 
-const HEIGHT_LIMIT = 360;
-
 /** Plain text of an Expressive Code block (one `.ec-line` per source line). */
 function codeText(block: HTMLElement) {
   const lines = block.querySelectorAll<HTMLElement>('.ec-line .code');
@@ -35,7 +33,7 @@ function button(cls: string, label: string, pressed?: boolean) {
 
 /**
  * Butterfly-style tools for every code block: copy + collapse in the mac
- * header, and a floating toggle for blocks taller than 360px.
+ * header, and a floating toggle for long blocks (collapsed at build time).
  * Runs on every page load; idempotent.
  */
 export function initCodeBlocks() {
@@ -64,8 +62,9 @@ export function initCodeBlocks() {
       foldBtn.title = folded ? '展开代码' : '折叠代码';
     });
 
-    if (pre.scrollHeight > HEIGHT_LIMIT + 60) {
-      block.classList.add('is-limited', 'has-expand');
+    // Long blocks arrive collapsed from the build (ec.config.mjs): nothing here
+    // reads layout, and the button overlays the block without changing its height.
+    if (block.classList.contains('has-expand')) {
       const expand = button('code-expand', '展开代码');
       const icon = document.createElement('span');
       icon.className = 'code-expand-icon';

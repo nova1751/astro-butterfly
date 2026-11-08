@@ -184,7 +184,16 @@
   margin: 0 0 20px;
   border-radius: 10px;
   box-shadow: var(--code-shadow);
+  /* Off-screen blocks skip style and layout: on a long post they are most of
+     the DOM, and each full style pass (first layout, the start of every view
+     transition) otherwise walks all their token spans. The reserved height is
+     the real one, computed from the line count the build writes (ec.config.mjs):
+     38px header + padding + lines, or the 360px cut for collapsed blocks;
+     `auto` keeps the measured size once a block has rendered. */
+  content-visibility: auto;
+  contain-intrinsic-block-size: auto calc(38px + 2 * var(--ec-codePadBlk) + var(--ec-lines, 1) * var(--ec-codeLineHt) * var(--ec-codeFontSize));
 }
+.article-container .expressive-code.is-limited { contain-intrinsic-block-size: auto calc(38px + 360px); }
 .article-container .expressive-code .frame.is-terminal .header {
   min-height: 38px;
   padding: 0 8px 0 74px;

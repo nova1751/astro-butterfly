@@ -10,7 +10,7 @@ const siteHost = new URL(site.url).host;
 /**
  * Post-processing for rendered Markdown:
  *  - heading ids using the Hexo slug algorithm (old #anchors keep working) + hover anchor link
- *  - images: lazy/async decoding, wrapped for the lightbox
+ *  - images: lazy/async decoding, wrapped for the lightbox; iframes: lazy
  *  - external links: new tab + nofollow (Hexo external_link + hexo-filter-nofollow)
  *  - standalone images with alt text become <figure> + <figcaption> (Butterfly
  *    photofigcaption, but at build time: no JS, no layout shift, works offline)
@@ -59,6 +59,12 @@ export default function rehypeContent({ base = '/' }: { base?: string } = {}) {
         return;
       }
 
+      // embedded demos and videos: load when scrolled near, not with the page
+      if (node.tagName === 'iframe') {
+        node.properties.loading ??= 'lazy';
+        return;
+      }
+
       if (node.tagName === 'a') {
         const href = String(node.properties.href ?? '');
         if (!/^https?:\/\//.test(href)) return;
@@ -70,6 +76,11 @@ export default function rehypeContent({ base = '/' }: { base?: string } = {}) {
         node.properties.target = '_blank';
         node.properties.rel = ['noopener', 'external', 'nofollow', 'noreferrer'];
       }
+    });
+
+    // Raw HTML in Markdown stays a string (no rehype-raw): add the attribute there too.
+    visit(tree, 'raw', (node: { value: string }) => {
+      node.value = node.value.replace(/<iframe\b(?![^>]*\bloading=)/gi, '<iframe loading="lazy"');
     });
 
     if (features.photoCaption) {

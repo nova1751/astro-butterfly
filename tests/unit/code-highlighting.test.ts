@@ -50,3 +50,20 @@ describe('code bracket highlighting', () => {
     expect(tokens(colored[2])).toEqual(tokens(baseline[2]));
   });
 });
+
+describe('code block size', () => {
+  const render = async (lines: number) => {
+    const engine = new ExpressiveCode({ ...config, themes: [await loadShikiTheme('one-dark-pro')] });
+    const { renderedGroupAst } = await engine.render({ code: Array.from({ length: lines }, (_, i) => `line ${i}`).join('\n'), language: 'txt' });
+    return renderedGroupAst.properties;
+  };
+
+  it('collapses long blocks in the HTML and records every block line count', async () => {
+    const short = await render(17);
+    expect(short.className).not.toContain('is-limited');
+    expect(String(short.style)).toContain('--ec-lines:17');
+    const long = await render(18);
+    expect(long.className).toEqual(expect.arrayContaining(['is-limited', 'has-expand']));
+    expect(String(long.style)).toContain('--ec-lines:18');
+  });
+});
