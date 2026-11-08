@@ -59,7 +59,9 @@ async function fetchList(api: string, server: string, type: string, id: string):
     artist: t.artist ?? t.author,
     url: t.url,
     cover: t.pic ?? t.cover,
-    lrc: t.lrc,
+    // Given no address APlayer requests the current page and runs its lyric regex over
+    // the HTML, which backtracks for seconds on the main thread.
+    lrc: t.lrc || 'data:text/plain,',
   }));
   if (list.length) save(key, list, LIST_CACHE_DAYS);
   return list;
