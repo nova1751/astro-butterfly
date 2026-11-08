@@ -41,6 +41,19 @@ A blog theme for [Astro](https://astro.build) with the look of [hexo-theme-butte
 - Pages stay readable without JavaScript, and a slow or failing third-party service never breaks the page.
 - Keyboard and screen reader support: tabs use arrow keys, focus states are visible, and the theme respects `prefers-reduced-motion`.
 
+## Performance
+
+![Lighthouse scores of the demo site](./.github/assets/lighthouse.png)
+
+| Page | Performance | Accessibility | Best Practices | SEO | FCP | LCP | TBT | CLS |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Home · Mobile | 97 (95–98) | 96 | 100 | 100 | 1.4 s | 2.3 s | 0 ms | 0 |
+| Post · Mobile | 96 (94–96) | 91 | 100 | 100 | 1.5 s | 2.4 s | 80 ms | 0 |
+| Home · Desktop | 100 (100–100) | 96 | 100 | 100 | 0.4 s | 0.6 s | 0 ms | 0 |
+| Post · Desktop | 99 (99–99) | 91 | 100 | 100 | 0.5 s | 0.7 s | 0 ms | 0 |
+
+Measured on 2026-11-08 against the [demo site](https://nova1751.github.io/astro-butterfly/); the post is [Markdown 写作](https://nova1751.github.io/astro-butterfly/posts/2b3c4d5e/). Lighthouse 12.6.1 CLI on one local machine with default simulated throttling, 3 runs per case. The table and image show the run with the median performance score, with the range of the 3 runs in brackets. Scores vary with hardware and network, and your own content, fonts and third-party scripts will change them.
+
 ## Quick start
 
 You need Node.js 22.12 or later and [pnpm](https://pnpm.io/).
