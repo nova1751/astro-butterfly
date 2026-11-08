@@ -162,6 +162,7 @@ import { music } from '@/config';
     --ap-fixed-height: 68px; /* 66px cover + the body's top and bottom borders */
     z-index: 95;
     width: var(--ap-fixed-width);
+    max-width: var(--ap-fixed-width); /* APlayer's own 400px loads later */
     border: 0;
     background: transparent;
   }
@@ -195,18 +196,28 @@ import { music } from '@/config';
     clip-path: inset(-30px -30px 0 0);
   }
   :root[data-theme='dark'] .aplayer.aplayer-fixed .aplayer-list { box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04), var(--card-box-shadow); }
-  /* Folded, the list is only max-height: 0, and its border and shadow drew a
-     square-cornered line above the player. They fade out with it (APlayer
-     transitions `all` on the list). */
-  /* Folding the player folds an open list with it, and opening the player brings
-     it back: the list stays open (no `aplayer-list-hide`), it only has no height
-     while the player is narrow. APlayer's `display: none` here couldn't animate. */
-  :root .aplayer.aplayer-fixed .aplayer-list.aplayer-list-hide,
-  :root .aplayer.aplayer-fixed.aplayer-narrow .aplayer-list {
+  /* A closed list has no height, and no border or shadow either: the background
+     paints under a border, so anything less drew a line above the player. */
+  :root .aplayer.aplayer-fixed .aplayer-list.aplayer-list-hide {
     display: block;
     max-height: 0 !important;
-    border-width: 0; /* not just transparent: the background paints under a border */
+    border-width: 0;
     box-shadow: none;
+  }
+  /* Folding the player takes an open list along, one card sliding off to the left:
+     same duration and easing as the body, right edges level all the way (the body
+     ends with 19px showing), and the list is still open when the player comes back.
+     `left`, not a transform: the body has to animate width and left on the main
+     thread, and a compositor animation next to it drifts apart on real frames. */
+  :root .aplayer.aplayer-fixed .aplayer-list {
+    left: 0;
+    transition: all 0.5s ease, left 0.3s ease, visibility 0s;
+  }
+  :root .aplayer.aplayer-fixed.aplayer-narrow .aplayer-list {
+    display: block;
+    visibility: hidden;
+    left: calc(19px - var(--ap-fixed-width));
+    transition: left 0.3s ease, visibility 0s 0.3s;
   }
   /* With the list open the body's top-right corner meets the list: square it. */
   :root .aplayer.aplayer-fixed:has(.aplayer-list:not(.aplayer-list-hide)):not(.aplayer-narrow) :is(.aplayer-body, .aplayer-miniswitcher) {
@@ -262,10 +273,14 @@ import { music } from '@/config';
     border-left: 1px solid var(--ap-line);
     border-radius: 0 10px 0 0;
   }
+  /* Folded, the player's box still spans the bottom strip of the page: taps there
+     belong to the page, only the visible tab takes them. */
+  :root .aplayer.aplayer-fixed.aplayer-narrow { pointer-events: none; }
+  :root .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body { pointer-events: auto; }
   :root .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body {
     width: 85px !important; /* 66px cover + 18px switcher + 1px outside border */
     left: -66px !important; /* APlayer sets `left` inline */
-    transition: left 0.3s;
+    transition: width 0.3s ease, left 0.3s ease;
   }
   @media (hover: hover) {
     :root .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body:hover {
@@ -278,6 +293,10 @@ import { music } from '@/config';
   :root[data-theme='dark'] .aplayer.aplayer-fixed .aplayer-body { box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04), var(--card-box-shadow); }
 
   @media (max-width: 768px) {
+    /* Full width on phones. Open, it covers the side buttons instead of sitting
+       under them; folded it stays below: its box still spans the bottom strip. */
+    :root .aplayer.aplayer-fixed { --ap-fixed-width: 100vw; }
+    :root .aplayer.aplayer-fixed:not(.aplayer-narrow) { z-index: 101; }
     /* shorter embed playlists on phones (content.css reserves the same height) */
     .music-embed.aplayer .aplayer-list,
     .music-embed.aplayer .aplayer-list ol {
