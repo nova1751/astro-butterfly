@@ -46,6 +46,38 @@ async function fetchList(api: string, server: string, type: string, id: string) 
   }));
 }
 
+let globalList: Promise<Awaited<ReturnType<typeof fetchList>>> | undefined;
+
+/** The global playlist, fetched once per visit (a failed fetch is retried on the next call). */
+function getGlobalList(el: HTMLElement) {
+  globalList ??= fetchList(el.dataset.api!, el.dataset.server!, el.dataset.type!, el.dataset.id!).catch((e) => {
+    globalList = undefined;
+    throw e;
+  });
+  return globalList;
+}
+
+/**
+ * Idle until urgent: once the page has loaded and the browser is idle, fetch
+ * what opening the player needs (APlayer's code and styles, the playlist from
+ * the Meting API, which alone takes ~1 s), so a click only builds the player.
+ * Skipped when the visitor asks to save data or is on a 2G connection.
+ */
+function warmUp() {
+  const el = document.querySelector<HTMLElement>('[data-global-music]');
+  if (!el || globalPlayer || el.dataset.state) return;
+  const conn = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
+  if (conn?.saveData || /2g/.test(conn?.effectiveType ?? '')) return;
+  loadAPlayer().catch(() => {});
+  getGlobalList(el).catch(() => {});
+}
+
+function warmUpWhenIdle() {
+  const idle = () => ('requestIdleCallback' in window ? requestIdleCallback(warmUp, { timeout: 5000 }) : setTimeout(warmUp, 2000));
+  if (document.readyState === 'complete') idle();
+  else addEventListener('load', idle, { once: true });
+}
+
 /** Only one player makes sound at a time (APlayer mutex across instances). */
 function exclusive(p: APlayerInstance) {
   p.on('play', () => [globalPlayer, ...pagePlayers].forEach((o) => o && o !== p && o.pause()));
@@ -58,10 +90,7 @@ async function initGlobal() {
   const trigger = el.querySelector<HTMLButtonElement>('[data-music-start]');
   if (trigger) trigger.disabled = true;
   try {
-    const [Ctor, audio] = await Promise.all([
-      loadAPlayer(),
-      fetchList(el.dataset.api!, el.dataset.server!, el.dataset.type!, el.dataset.id!),
-    ]);
+    const [Ctor, audio] = await Promise.all([loadAPlayer(), getGlobalList(el)]);
     // APlayer builds the player full width and then collapses it; without this
     // the collapse plays as a 0.3s animation on every first load.
     el.classList.add('ap-init');
@@ -129,10 +158,15 @@ let started = false;
 export function initMusic() {
   if (!started) {
     started = true;
-    // Build the full playlist only when the visitor opens the player.
+    // Build the player when the visitor opens it; its code and playlist are
+    // fetched ahead of time, when the browser is idle or the pointer heads there.
     document.addEventListener('click', (e) => {
       if ((e.target as Element).closest('[data-music-start]')) void initGlobal();
     });
+    document.addEventListener('pointerover', (e) => {
+      if ((e.target as Element).closest?.('[data-music-start]')) warmUp();
+    });
+    warmUpWhenIdle();
     document.addEventListener('astro:before-swap', () => {
       pagePlayers.forEach((p) => p.destroy());
       pagePlayers = [];

@@ -106,6 +106,13 @@ import { music } from '@/config';
     scrollbar-color: var(--sb-thumb) transparent;
     overscroll-behavior-y: contain;
   }
+  /* The global playlist (hundreds of rows) starts folded away, yet APlayer reads
+     the player's width while building it, which laid out every row: most of the
+     cost of opening the player. Skipped until the list is opened. */
+  :root #global-music .aplayer-list ol {
+    content-visibility: auto;
+    contain-intrinsic-block-size: auto 300px;
+  }
 
   :root .aplayer .aplayer-list ol li {
     display: flex;

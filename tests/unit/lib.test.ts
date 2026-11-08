@@ -86,3 +86,17 @@ describe('git-dates', () => {
     expect(getFileGitDate('non-existent-file-path-xyz.md')).toBeUndefined();
   });
 });
+
+describe('remote image mirrors', () => {
+  it('tries the same npm file on the other CDNs, original first', async () => {
+    const { mirrorsOf } = await import('../../src/lib/remote-image');
+    expect(mirrorsOf('https://npm.elemecdn.com/nova1751-sources/blogImg/noa.png')).toEqual([
+      'https://npm.elemecdn.com/nova1751-sources/blogImg/noa.png',
+      'https://unpkg.com/nova1751-sources/blogImg/noa.png',
+      'https://cdn.jsdelivr.net/npm/nova1751-sources/blogImg/noa.png',
+    ]);
+    expect(mirrorsOf('https://cdn.jsdelivr.net/npm/pkg@1/a.png')[1]).toBe('https://npm.elemecdn.com/pkg@1/a.png');
+    expect(mirrorsOf('https://s2.loli.net/a.png')).toEqual(['https://s2.loli.net/a.png']);
+    expect(mirrorsOf('https://cdn.jsdelivr.net/gh/user/repo/a.png')).toEqual(['https://cdn.jsdelivr.net/gh/user/repo/a.png']);
+  });
+});
