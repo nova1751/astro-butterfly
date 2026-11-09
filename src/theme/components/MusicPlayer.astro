@@ -184,10 +184,23 @@ import { music } from '@/config';
     box-shadow: var(--card-box-shadow);
   }
   :root .aplayer.aplayer-fixed .aplayer-pic { border-radius: 0; }
-  :root .aplayer.aplayer-fixed .aplayer-info { border-top: 0; }
+  /* Folding, APlayer squeezes the title and controls with scaleX(0) while the body
+     narrows. Fade them instead: quickly out, and back in once the body has mostly
+     opened, so the text is never seen squashed or reflowing. */
+  :root .aplayer.aplayer-fixed .aplayer-info {
+    border-top: 0;
+    transform: none;
+    transition: opacity 0.2s ease 0.1s;
+  }
+  :root .aplayer.aplayer-fixed.aplayer-narrow .aplayer-info {
+    transform: none;
+    opacity: 0;
+    transition: opacity 0.12s ease-out;
+  }
   /* No animation while APlayer builds the player and collapses it (music.ts). */
   :root .aplayer.ap-init .aplayer-body,
-  :root .aplayer.ap-init .aplayer-list { transition: none !important; }
+  :root .aplayer.ap-init .aplayer-list,
+  :root .aplayer.ap-init .aplayer-info { transition: none !important; }
   :root .aplayer.aplayer-fixed .aplayer-list {
     margin-bottom: calc(var(--ap-fixed-height) + env(safe-area-inset-bottom));
     border: 1px solid var(--ap-line);
@@ -210,6 +223,7 @@ import { music } from '@/config';
     max-height: 0 !important;
     border-width: 0;
     box-shadow: none;
+    opacity: 0; /* fades with its height, no last rows left hanging */
   }
   /* Folding the player takes an open list along, one card sliding off to the left:
      same duration and easing as the body, right edges level all the way (the body
@@ -218,13 +232,15 @@ import { music } from '@/config';
      thread, and a compositor animation next to it drifts apart on real frames. */
   :root .aplayer.aplayer-fixed .aplayer-list {
     left: 0;
-    transition: all 0.5s ease, left 0.3s ease, visibility 0s;
+    transition: all 0.5s ease, left 0.3s ease, opacity 0.25s ease 0.05s, visibility 0s;
   }
+  /* It fades out on the way, so the 19px left at the screen edge never shows rows. */
   :root .aplayer.aplayer-fixed.aplayer-narrow .aplayer-list {
     display: block;
     visibility: hidden;
+    opacity: 0;
     left: calc(19px - var(--ap-fixed-width));
-    transition: left 0.3s ease, visibility 0s 0.3s;
+    transition: left 0.3s ease, opacity 0.18s ease-out, visibility 0s 0.3s;
   }
   /* With the list open the body's top-right corner meets the list: square it. */
   :root .aplayer.aplayer-fixed:has(.aplayer-list:not(.aplayer-list-hide)):not(.aplayer-narrow) :is(.aplayer-body, .aplayer-miniswitcher) {
