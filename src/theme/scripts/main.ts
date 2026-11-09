@@ -18,9 +18,11 @@ import { initLoadBar } from './load-bar';
 import { initTranslate } from './translate';
 import { initStats } from './stats';
 import { initMermaid } from './mermaid';
+import { initBodyFont } from './fallback-font';
 
 initPersistStyles(); // must run before any library injects CSS
 initLoadBar(); // first, so a slow first load shows progress as early as possible
+initBodyFont();
 initPreferences();
 initScroll();
 initSearch();
@@ -28,13 +30,15 @@ initSidebar();
 initPowerMode();
 initTranslate(); // registers its own astro:page-load handler
 
-document.addEventListener('astro:page-load', () => {
-  onPageScroll();
-  initToc();
-  initContent();
-  initMermaid();
-  initMusic();
-  initClock();
-  initComments();
-  initStats();
+// One task per feature, so a long page never blocks input for all of them at once.
+// A navigation during the gaps cancels the rest: its own page-load runs them all again.
+const pageInits = [onPageScroll, initToc, initContent, initMermaid, initMusic, initClock, initComments, initStats];
+let pageLoads = 0;
+document.addEventListener('astro:page-load', async () => {
+  const current = ++pageLoads;
+  for (const init of pageInits) {
+    init();
+    await new Promise((resolve) => setTimeout(resolve));
+    if (current !== pageLoads) return;
+  }
 });

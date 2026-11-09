@@ -64,7 +64,7 @@ function initNewestComments() {
   if (!envId) return;
 
   const render = (items: RecentComment[]) => {
-    useFallbackFont();
+    useFallbackFont(items.map((c) => c.commentText + c.nick).join(''));
     list.innerHTML = items.length
       ? items
           .map(
@@ -79,12 +79,13 @@ function initNewestComments() {
       : '<li class="aside-list-empty">没有评论</li>';
   };
 
-  const cached = load<RecentComment[]>('twikoo-newest-comments');
-  if (cached) return render(cached);
-
+  // Near the viewport only, cached or not: on phones the card is far down the page,
+  // and rendering it pulls the full font for any character the site doesn't have.
   const io = new IntersectionObserver(async (entries) => {
     if (!entries.some((e) => e.isIntersecting)) return;
     io.disconnect();
+    const cached = load<RecentComment[]>('twikoo-newest-comments');
+    if (cached) return render(cached);
     try {
       const tk = await loadTwikoo();
       const items = await tk.getRecentComments({ envId, pageSize: 5, includeReply: true });
@@ -94,7 +95,7 @@ function initNewestComments() {
     } catch {
       list.innerHTML = '<li class="aside-list-empty">评论加载失败</li>';
     }
-  });
+  }, { rootMargin: '300px 0px' });
   io.observe(card);
 }
 

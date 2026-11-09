@@ -120,7 +120,7 @@ function weatherIcon(code: number): [string, string] {
 }
 
 function setCity(el: HTMLElement, city: string) {
-  useFallbackFont(); // any city name
+  useFallbackFont(city); // any city name
   const chip = el.querySelector<HTMLElement>('[data-wx-city]')!;
   chip.querySelector('span')!.textContent = city;
   chip.title = city; // full name when the chip is cut off

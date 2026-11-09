@@ -46,7 +46,7 @@ const ogImage = new URL(url(image), Astro.site).href;
 ---
 
 <!doctype html>
-<html lang={site.lang} data-theme="light" data-fallback-font={font.preload ? url('/fonts/lxgw/fallback.css') : undefined}>
+<html lang={site.lang} data-theme="light" data-fallback-font={font.preload ? url('/fonts/lxgw/fallback.css') : undefined} data-body-font={font.body ? url(font.body) : undefined}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -60,6 +60,7 @@ const ogImage = new URL(url(image), Astro.site).href;
     <meta name="keywords" content={site.keywords.join(',')} />
     <meta name="author" content={site.author} />
     {font.preload && <link rel="preload" href={url(font.preload)} as="font" type="font/woff2" crossorigin="anonymous" />}
+    {font.body && <noscript><link rel="stylesheet" href={url(font.body)} /></noscript>}
     <link rel="canonical" href={canonical} />
     <link rel="icon" href={url(site.logo)} />
     <link rel="apple-touch-icon" href={url(site.logo)} />
