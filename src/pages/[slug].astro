@@ -18,7 +18,7 @@ export const getStaticPaths = (async () => {
 const { page } = Astro.props;
 const { Content } = await render(page);
 const type = page.data.type;
-const avatar = type === 'about' ? await optimize(url(site.avatar), imagePresets.avatar) : undefined;
+const avatar = type === 'about' ? await optimize(site.avatar, imagePresets.avatar) : undefined;
 const isEmpty = !page.body?.trim();
 const titles: Record<string, string> = { about: '关于', link: '友情链接' };
 const title = titles[type ?? ''] ?? page.data.title;

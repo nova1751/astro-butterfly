@@ -29,8 +29,8 @@ updated: 2024-06-02 09:00    # 可选；一般不用写，见下文“更新时�
 abbrlink: 1a2b3c4d           # 必填；文章地址 /posts/1a2b3c4d/
 tags: [Astro, 前端]          # 一个时可以只写字符串
 categories: [前端, 框架]      # 数组表示层级：前端 › 框架
-cover: /img/covers/2.svg     # 列表卡片封面；缺省用 site.defaultCover
-top_img: /img/banner.svg     # 文章顶部横幅；缺省用 cover
+cover: ./my-post/cover.jpg   # 列表卡片封面；缺省用 site.defaultCover
+top_img: ./my-post/top.jpg   # 文章顶部横幅；缺省用 cover
 description: 摘要            # 缺省截取正文开头
 comments: false              # 关闭本篇评论（Hexo 的 comment 字段也认）
 draft: true                  # 草稿：只在 pnpm dev 里出现
@@ -66,10 +66,19 @@ draft: true                  # 草稿：只在 pnpm dev 里出现
 
 ## 图片
 
-```md
-![这段文字会显示为图片说明](/img/photo.jpg)
+把图片放在与文章同名的文件夹里，用相对路径引用：
+
+```text
+src/content/posts/my-post.md
+src/content/posts/my-post/photo.jpg
 ```
 
+```md
+![这段文字会显示为图片说明](./my-post/photo.jpg)
+```
+
+- 这样的图片在构建时处理：转成现代格式、生成多种尺寸、写入宽高。文件不存在时构建会报错。
+- `public/` 下的路径（`/img/photo.jpg`）和完整 URL 也能用，但会原样输出，不做处理。
 - 所有图片都会懒加载，点击后用灯箱放大查看。
 - 写了 alt 文字的图片，下方会显示居中的说明文字。像 `image.png` 这种文件名式的 alt 不会显示。
 - 需要指定尺寸时直接写 HTML：`<img src="/img/a.png" alt="说明" width="300">`。

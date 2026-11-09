@@ -1,13 +1,13 @@
 ---
 import { url } from '@/lib/url';
 import { Icon } from 'astro-icon/components';
-import { optimize, imagePresets } from '@/lib/images';
+import { optimize, imagePresets, type ImageSource } from '@/lib/images';
 import { site, nav } from '@/config';
 import { getPosts, getTags, getCategories } from '@/lib/posts';
 
 interface Props {
   kind: 'home' | 'page' | 'post';
-  topImg: string;
+  topImg: ImageSource;
   title?: string;
 }
 const { kind, topImg, title } = Astro.props;
@@ -19,9 +19,9 @@ const [posts, tags, cats, top, logo, avatar] = await Promise.all([
   getPosts(),
   getTags(),
   getCategories(),
-  kind !== 'home' ? optimize(url(topImg), imagePresets.header) : undefined,
-  optimize(url(site.logo), imagePresets.logo),
-  optimize(url(site.avatar), imagePresets.avatar),
+  kind !== 'home' ? optimize(topImg, imagePresets.header) : undefined,
+  optimize(site.logo, imagePresets.logo),
+  optimize(site.avatar, imagePresets.avatar),
 ]);
 ---
 

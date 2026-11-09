@@ -2,11 +2,14 @@
 import { url } from '@/lib/url';
 import Layout from '@/theme/Layout.astro';
 import { site } from '@/config';
+import { optimize, imagePresets } from '@/lib/images';
+
+const image = await optimize(site.error404Img, imagePresets.notFound);
 ---
 
 <Layout title="404" header="page" aside={false} noindex>
   <div class="card error404">
-    <img src={url(site.error404Img)} alt="" width="460" height="300" />
+    <img src={image.src} srcset={image.srcset} alt="" width="460" height="300" />
     <div class="error-info">
       <h1 class="error_title">404</h1>
       <p class="error_subtitle">Page Not Found</p>

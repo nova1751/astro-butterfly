@@ -1,5 +1,6 @@
 ---
 import { url } from '@/lib/url';
+import { optimize, imagePresets, type ImageSource } from '@/lib/images';
 import { ClientRouter } from 'astro:transitions';
 import './generated/lxgw.css';
 import font from './generated/font.json';
@@ -16,10 +17,10 @@ import MusicPlayer from './components/MusicPlayer.astro';
 export interface Props {
   title?: string;
   description?: string;
-  image?: string;
+  image?: ImageSource;
   /** 'home' = no banner; 'page' = banner with centered title; 'post' = banner with post info (slot "post-info") */
   header?: 'home' | 'page' | 'post';
-  topImg?: string;
+  topImg?: ImageSource;
   aside?: boolean;
   ogType?: 'website' | 'article';
   noindex?: boolean;
@@ -42,7 +43,7 @@ const {
 
 const fullTitle = title ? `${title} | ${site.title}` : site.title;
 const canonical = new URL(Astro.url.pathname, Astro.site);
-const ogImage = new URL(url(image), Astro.site).href;
+const ogImage = new URL((await optimize(image, imagePresets.social)).src, Astro.site).href;
 ---
 
 <!doctype html>

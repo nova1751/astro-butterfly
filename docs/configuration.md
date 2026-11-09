@@ -35,7 +35,11 @@
 | `defaultCover` | 没写 `cover` 的文章使用的封面 |
 | `error404Img` | 404 页面的配图 |
 
-图片可以用 `public/` 下的路径（如 `/img/avatar.png`），也可以用完整的外部 URL。
+图片有三种写法：
+
+- `src/assets/` 下的路径（如 `/src/assets/avatar.png`）：构建时转成现代格式并按显示尺寸输出，推荐用于位图。
+- `public/` 下的路径（如 `/img/avatar.svg`）：原样输出。
+- 完整的外部 URL：原样输出。
 
 ## nav：导航菜单
 

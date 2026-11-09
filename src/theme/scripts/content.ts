@@ -62,8 +62,9 @@ async function openLightbox(link: HTMLAnchorElement) {
     return {
       src: a.href,
       msrc: img?.currentSrc || img?.src,
-      width: img?.naturalWidth || 1600,
-      height: img?.naturalHeight || 1200,
+      // The attributes hold the full size; natural size is whichever srcset candidate loaded.
+      width: Number(img?.getAttribute('width')) || img?.naturalWidth || 1600,
+      height: Number(img?.getAttribute('height')) || img?.naturalHeight || 1200,
       alt: img?.alt ?? '',
     };
   });
@@ -89,6 +90,11 @@ export function initContent() {
       openLightbox(a).catch(() => window.open(a.href, '_blank'));
     });
   }
+  // src is the full-size file; the browser shows a srcset candidate in the page.
+  document.querySelectorAll<HTMLAnchorElement>('a[data-pswp]:not([href])').forEach((a) => {
+    const img = a.querySelector('img');
+    if (img) a.href = img.src;
+  });
   initTabs(document);
   initCodeBlocks();
   const outdated = document.querySelector<HTMLElement>('[data-outdated]');

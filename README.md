@@ -168,6 +168,6 @@ This theme adapts the design and assets of [hexo-theme-butterfly](https://github
 
 The dev/check/build commands cut site-specific WenKai font subsets from your content: a preloaded shell chunk (UI text, every post's title, tags and categories, the home page excerpts) and a chunk for post bodies, so the home page needs a single font file. Characters the site never shows (comments, the weather city, search input, traditional Chinese) fall back to the original font chunks, loaded as a separate family only when one of those features runs (`src/theme/scripts/fallback-font.ts`). Run `pnpm build:font` after adding new characters during development. Generated files are ignored by Git; CI caches fonts and processed images.
 
-Supported remote covers and Markdown images are optimized during the build, with original URLs retained when unavailable. The global player initializes on first open; player and lightbox styles load on demand.
+Images stored next to a post or in `src/assets/` are encoded during the build, and a missing file fails it; `public/` paths and full URLs are served as they are. The global player initializes on first open; player and lightbox styles load on demand.
 
-Resource optimization is optional: damaged font caches are regenerated, and font failures fall back to the original font. A failed build retries once without remote-image optimization; a failed retry still exits with an error. Use `BLOG_DISABLE_IMAGE_OPTIMIZATION=1 pnpm build` to opt out explicitly.
+Resource optimization is optional: damaged font caches are regenerated, and font failures fall back to the original font.

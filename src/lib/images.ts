@@ -1,16 +1,20 @@
 import { getImage } from 'astro:assets';
-import { isOptimizableRemote, resolveRemoteImage } from './remote-image';
+import type { ImageMetadata } from 'astro';
+import { url } from './url';
 
 /**
- * Remote images (image hosts, CDNs) re-encoded at build time: AVIF, sized for
- * where they are shown, served from this site. Visitors no longer download
- * multi-hundred-KB PNGs from third-party hosts.
+ * Images stored in the project are encoded at build time: AVIF, sized for where
+ * they are shown. A missing one fails the build rather than the visitor.
  *
- * If a source can't be fetched while building, the original URL is used, so a
- * flaky image host never fails the build. Astro caches the downloaded originals
- * and the encoded results in node_modules/.astro (cached in CI as well).
+ * - post covers with a relative path: `image()` in the content schema resolves
+ *   them to ImageMetadata
+ * - site images (src/config.ts): a path under src/assets, looked up below
+ * - anything else, such as a file in public/ or a full URL: served as it is
  */
+export type ImageSource = ImageMetadata | string;
 export type Img = { src: string; srcset?: string; sizes?: string };
+
+const siteImages = import.meta.glob<{ default: ImageMetadata }>('/src/assets/*.{png,jpg,jpeg,webp,avif,svg}', { eager: true });
 
 type Options = {
   /** Fixed output box: both set -> cropped to cover it (thumbnails, avatars). */
@@ -19,29 +23,30 @@ type Options = {
   /** Responsive candidates; the shown size is picked by `sizes`. */
   widths?: number[];
   sizes?: string;
+  /** Defaults to AVIF; a format other programs must read (feeds, link previews) can override it. */
+  format?: 'avif' | 'jpg' | 'png';
 };
 
 const done = new Map<string, Promise<Img>>();
 
-export function optimize(src: string, o: Options): Promise<Img> {
-  const key = JSON.stringify([src, o]);
+export function optimize(source: ImageSource, o: Options): Promise<Img> {
+  const src = typeof source === 'string' ? (siteImages[source]?.default ?? source) : source;
+  if (typeof src === 'string') return Promise.resolve({ src: url(src) });
+  // Vector images are already resolution independent.
+  if (src.format === 'svg') return Promise.resolve({ src: src.src });
+  const key = JSON.stringify([src.src, o]);
   let p = done.get(key);
   if (!p) {
-    p = (async () => {
-      const remote = isOptimizableRemote(src) ? await resolveRemoteImage(src) : undefined;
-      if (!remote) return { src };
-      const img = await getImage({
-        src: remote,
-        format: 'avif',
-        width: o.width,
-        ...(o.height ? { height: o.height, fit: 'cover' } : { inferSize: true }),
-        ...(o.widths ? { widths: o.widths, sizes: o.sizes } : { densities: [1, 2] }),
-      });
-      return { src: img.src, srcset: img.srcSet.attribute || undefined, sizes: o.sizes };
-    })().catch((e) => {
-      console.warn(`[images] ${src}: ${e}; using the original URL`);
-      return { src };
-    });
+    // Never upscale: the source's own width replaces any candidate wider than it.
+    const width = Math.min(o.width, src.width);
+    const base = { src, format: o.format ?? ('avif' as const), layout: 'none' as const };
+    const encoded = o.height
+      // The types rule out `layout` next to `densities`, but the config's default layout must still be off here.
+      ? getImage({ ...base, layout: 'none' as never, width: o.width, height: o.height, fit: 'cover', densities: [1, 2] })
+      : o.widths
+        ? getImage({ ...base, width, widths: [...new Set(o.widths.map((w) => Math.min(w, width)))], sizes: o.sizes })
+        : getImage({ ...base, width });
+    p = encoded.then((img) => ({ src: img.src, srcset: img.srcSet.attribute || undefined, sizes: o.sizes }));
     done.set(key, p);
   }
   return p;
@@ -59,4 +64,8 @@ export const imagePresets = {
   thumb: { width: 80, height: 80 },
   avatar: { width: 120, height: 120 },
   logo: { width: 36, height: 36 },
+  notFound: { width: 460, height: 300 },
+  /** Link previews: social platforms don't all read AVIF */
+  social: { width: 1200, format: 'jpg' },
+  feedIcon: { width: 64, height: 64, format: 'png' },
 } satisfies Record<string, Options>;

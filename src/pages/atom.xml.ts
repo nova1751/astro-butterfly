@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { getPosts, postUrl, tagUrl, excerpt } from '@/lib/posts';
 import { site, feed } from '@/config';
 import { absolute } from '@/lib/url';
+import { optimize, imagePresets } from '@/lib/images';
 
 /**
  * Atom ids are permanent identifiers, not links. If an earlier feed minted them under
@@ -37,7 +38,7 @@ ${p.data.tags.map((t) => `    <category term="${esc(t)}" scheme="${absolute(tagU
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>${esc(site.title)}</title>
   <subtitle>${esc(site.subtitle)}</subtitle>
-  <icon>${absolute(site.logo)}</icon>
+  <icon>${absolute((await optimize(site.logo, imagePresets.feedIcon)).src)}</icon>
   <link href="${absolute('/atom.xml')}" rel="self"/>
   <link href="${absolute('/')}"/>
   <updated>${updated.toISOString()}</updated>

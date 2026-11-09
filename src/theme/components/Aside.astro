@@ -18,8 +18,8 @@ const hasSticky = sticky !== '';
 const recent = [...posts].sort((a, b) => b.data.updated.getTime() - a.data.updated.getTime()).slice(0, aside.recentPosts);
 
 const [avatar, ...thumbs] = await Promise.all([
-  optimize(url(site.avatar), imagePresets.avatar),
-  ...recent.map((p) => optimize(url(coverOf(p)), imagePresets.thumb)),
+  optimize(site.avatar, imagePresets.avatar),
+  ...recent.map((p) => optimize(coverOf(p), imagePresets.thumb)),
 ]);
 
 // top-level categories, most posts first

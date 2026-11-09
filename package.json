@@ -18,7 +18,7 @@
   ],
   "scripts": {
     "dev": "node scripts/build-font.mjs && astro dev",
-    "build": "node scripts/build-font.mjs && node scripts/build-site.mjs && pagefind --site dist",
+    "build": "node scripts/build-font.mjs && astro build && pagefind --site dist",
     "preview": "astro preview",
     "check": "node scripts/build-font.mjs && astro check",
     "test": "vitest run",

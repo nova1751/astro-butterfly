@@ -48,7 +48,7 @@ categories:
 abbrlink: ${abbrlink}
 date: ${now}
 updated: ${now}
-cover:
+# cover: ./${slug}/cover.jpg
 ---
 
 :::tip{type=home}

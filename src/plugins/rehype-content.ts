@@ -48,11 +48,14 @@ export default function rehypeContent({ base = '/' }: { base?: string } = {}) {
         const cls = (node.properties.className as string[] | undefined) ?? [];
         const inCard = cls.some((c) => c.startsWith('site-card'));
         if (!inCard && parent && typeof index === 'number' && (parent as Element).tagName !== 'a') {
-          // wrap with a link to the full image so the lightbox (and no-JS users) can open it
+          // wrap with a link to the full image so the lightbox can open it. A post's own
+          // image only gets its final URL at render time; initContent() links those.
+          // The router and prefetch must leave these same-origin image links alone.
+          const src = node.properties.src as string;
           parent.children[index] = {
             type: 'element',
             tagName: 'a',
-            properties: { href: node.properties.src as string, className: ['lightbox'], dataPswp: '', ariaLabel: String(node.properties.alt || '查看原图') },
+            properties: { ...(/^(\/|https?:)/.test(src) ? { href: src } : {}), className: ['lightbox'], dataPswp: '', dataAstroReload: '', dataAstroPrefetch: 'false', ariaLabel: String(node.properties.alt || '查看原图') },
             children: [node],
           };
         }
