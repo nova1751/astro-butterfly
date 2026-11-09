@@ -176,7 +176,7 @@ async function initGlobal() {
     viewport.className = 'aplayer-lrc-viewport';
     contents.before(viewport);
     viewport.append(contents);
-    // Match the original blog: lyrics start hidden, and the LRC button toggles them.
+    // Lyrics start off, and the LRC button turns them on when wanted.
     // Use the button so APlayer's visibility and button state stay in sync.
     el.querySelector<HTMLButtonElement>('.aplayer-icon-lrc')!.click();
     exclusive(globalPlayer);

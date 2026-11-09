@@ -254,10 +254,9 @@ import { music } from '@/config';
     pointer-events: none;
     transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
-  /* Fade out on an empty (instrumental) line, and while the playlist is open:
-     the list rises above the player and the pill would sit on top of it. */
-  :root .aplayer.aplayer-fixed .aplayer-lrc:has(p.aplayer-lrc-current:empty),
-  :root .aplayer.aplayer-fixed:not(.aplayer-narrow):has(.aplayer-list:not(.aplayer-list-hide)) .aplayer-lrc {
+  /* Fade out on an empty (instrumental) line. The open list stays as it is: it
+     stacks above the pill (100 over APlayer's 98), so it simply covers any overlap. */
+  :root .aplayer.aplayer-fixed .aplayer-lrc:has(p.aplayer-lrc-current:empty) {
     opacity: 0;
     transform: translateX(-50%) translateY(8px) scale(0.95);
   }
