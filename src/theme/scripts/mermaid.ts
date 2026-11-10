@@ -27,6 +27,10 @@ async function draw(el: HTMLElement) {
       suppressErrorRendering: true,
       theme,
       fontFamily: getComputedStyle(el).fontFamily,
+      // Mermaid 12 defaults to ELK, a ~1.5 MB download for every page with a diagram.
+      // Dagre is the layout Mermaid ≤ 11 and Butterfly draw with; a diagram can still
+      // opt into ELK in its own frontmatter (`config: { layout: elk }`), loaded on demand.
+      layout: 'dagre',
       // The stock shadow is a light grey: a glow around every node on dark pages.
       themeVariables: { dropShadow: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3))' },
     });

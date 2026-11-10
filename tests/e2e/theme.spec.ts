@@ -42,6 +42,8 @@ test('post page: meta, TOC and every tag plugin render', async ({ page }) => {
 });
 
 test('mermaid diagrams draw and follow the theme', async ({ page }) => {
+  const elk: string[] = [];
+  page.on('request', (r) => /\/elk-[^/]*\.js$/.test(r.url()) && elk.push(r.url()));
   await page.goto('/posts/2b3c4d5e/');
   const diagram = page.locator('.mermaid-diagram').first();
   await diagram.scrollIntoViewIfNeeded();
@@ -49,6 +51,8 @@ test('mermaid diagrams draw and follow the theme', async ({ page }) => {
   await expect(diagram).toHaveAttribute('data-rendered', 'default');
   await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark'));
   await expect(diagram).toHaveAttribute('data-rendered', 'dark', { timeout: 10_000 });
+  // Mermaid 12 defaults to ELK (~1.5 MB); the examples only need dagre.
+  expect(elk).toEqual([]);
 });
 
 test('tabs switch by click and arrow keys', async ({ page }) => {
