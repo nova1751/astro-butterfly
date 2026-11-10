@@ -41,15 +41,15 @@ const [posts, tags, cats, top, logo, avatar] = await Promise.all([
       </button>
       <ul class="menus-items">
         {
-          nav.map((item) =>
+          nav.map((item, i) =>
             item.children ? (
               <li class="menu-item has-child">
-                <button type="button" class="menu-link" aria-haspopup="true" aria-expanded="false">
+                <button type="button" class="menu-link" aria-expanded="false" aria-controls={`nav-menu-${i}`}>
                   <Icon name={item.icon} />
                   <span>{item.label}</span>
                   <Icon name="fa6-solid:chevron-down" class="expand" />
                 </button>
-                <ul class="menu-child">
+                <ul class="menu-child" id={`nav-menu-${i}`}>
                   {item.children.map((c) => (
                     <li>
                       <a href={url(c.href!)} aria-current={isActive(c.href) ? 'page' : undefined}>
@@ -71,7 +71,7 @@ const [posts, tags, cats, top, logo, avatar] = await Promise.all([
           )
         }
       </ul>
-      <button type="button" class="menu-item toggle-menu" data-sidebar-open aria-label="打开菜单" aria-controls="sidebar">
+      <button type="button" class="menu-item toggle-menu" data-sidebar-open aria-label="打开菜单" aria-haspopup="dialog" aria-controls="sidebar">
         <Icon name="fa6-solid:bars" />
       </button>
     </div>
@@ -94,9 +94,8 @@ const [posts, tags, cats, top, logo, avatar] = await Promise.all([
 </header>
 
 <!-- mobile drawer -->
-<div id="sidebar" class="sidebar" hidden>
-  <div class="sidebar-mask" data-sidebar-close></div>
-  <div class="sidebar-menus" role="dialog" aria-modal="true" aria-label="菜单">
+<dialog id="sidebar" class="sidebar" aria-label="菜单">
+  <div class="sidebar-menus">
     <div class="avatar-img"><img src={avatar.src} srcset={avatar.srcset} alt={site.author} width="110" height="110" loading="lazy" decoding="async" /></div>
     <div class="sidebar-site-data">
       <a href={url('/archives/')}><span class="headline">文章</span><span class="length-num">{posts.length}</span></a>
@@ -117,13 +116,13 @@ const [posts, tags, cats, top, logo, avatar] = await Promise.all([
       }
     </ul>
   </div>
-</div>
+</dialog>
 
 <style>
   #page-header {
     position: relative;
-    /* Keep the isolated banner's fixed navigation above cards and tools,
-       while leaving the drawer (110) and dialogs above navigation. */
+    /* Keep the isolated banner's fixed navigation above cards and tools.
+       The drawer and search are modal dialogs in the top layer, above it all. */
     z-index: 105;
     width: 100%;
   }
@@ -273,7 +272,8 @@ const [posts, tags, cats, top, logo, avatar] = await Promise.all([
     width: 0.8em;
     transition: transform 0.3s;
   }
-  .has-child:is(:hover, :focus-within) :global(.expand) {
+  /* Open state lives on the button (nav-menu.ts), so screen and aria never disagree. */
+  .menu-link[aria-expanded='true'] :global(.expand) {
     transform: rotate(180deg);
   }
   .menu-child {
@@ -298,8 +298,12 @@ const [posts, tags, cats, top, logo, avatar] = await Promise.all([
     width: 100%;
     height: 12px;
   }
-  .has-child:is(:hover, :focus-within) .menu-child {
+  .menu-link[aria-expanded='true'] + .menu-child {
     display: block;
+  }
+  /* Without scripts nothing sets aria-expanded: fall back to hover and focus. */
+  @media (scripting: none) {
+    .has-child:is(:hover, :focus-within) .menu-child { display: block; }
   }
   .menu-child a {
     display: flex;
@@ -364,30 +368,43 @@ const [posts, tags, cats, top, logo, avatar] = await Promise.all([
   }
 
   /* ---------------- mobile drawer ---------------- */
+  /* Native modal <dialog>: the rest of the page is inert while it is open, so Tab
+     stays inside, Escape closes it, and focus returns to the menu button. */
   .sidebar {
     position: fixed;
-    inset: 0;
-    z-index: 110;
+    inset: 0 0 0 auto;
+    width: min(300px, 85vw);
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    color: inherit;
+    background: var(--card-solid-bg);
+    overscroll-behavior: contain;
+    transform: translateX(100%);
+    transition: transform 0.3s var(--ease), overlay 0.3s allow-discrete, display 0.3s allow-discrete;
   }
-  .sidebar-mask {
-    position: absolute;
-    inset: 0;
+  .sidebar[open] { transform: none; }
+  .sidebar::backdrop {
     background: rgba(0, 0, 0, 0.6);
-    animation: fade 0.3s;
+    opacity: 0;
+    transition: opacity 0.3s, overlay 0.3s allow-discrete, display 0.3s allow-discrete;
+  }
+  .sidebar[open]::backdrop { opacity: 1; }
+  @starting-style {
+    .sidebar[open] { transform: translateX(100%); }
+    .sidebar[open]::backdrop { opacity: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .sidebar, .sidebar::backdrop { transition: none; }
   }
   .sidebar-menus {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: min(300px, 85vw);
     height: 100%;
     overflow-y: auto;
     padding: 20px 0;
-    background: var(--card-solid-bg);
-    animation: slide-in 0.3s var(--ease);
   }
-  @keyframes slide-in { from { transform: translateX(100%); } }
-  @keyframes fade { from { opacity: 0; } }
   .avatar-img {
     margin: 10px auto;
     width: 110px;

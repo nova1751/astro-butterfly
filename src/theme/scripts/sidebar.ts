@@ -1,29 +1,29 @@
-/** Mobile navigation drawer. */
+/**
+ * Mobile navigation drawer, a native modal <dialog>. `showModal()` makes the rest
+ * of the page inert (Tab stays inside), Escape closes it natively, and closing
+ * returns focus to the button that opened it.
+ */
 export function initSidebar() {
-  const sidebar = () => document.getElementById('sidebar');
-  let lastFocus: HTMLElement | null = null;
-
+  const sidebar = () => document.getElementById('sidebar') as HTMLDialogElement | null;
   const close = () => {
     const s = sidebar();
-    if (!s || s.hidden) return;
-    s.hidden = true;
-    document.documentElement.style.overflow = '';
-    lastFocus?.focus();
+    if (s?.open) s.close();
   };
 
   document.addEventListener('click', (e) => {
     const t = e.target as Element;
     if (t.closest('[data-sidebar-open]')) {
       const s = sidebar();
-      if (!s) return;
-      lastFocus = document.activeElement as HTMLElement;
-      s.hidden = false;
+      if (!s || s.open) return;
+      s.showModal();
       document.documentElement.style.overflow = 'hidden';
-      s.querySelector<HTMLElement>('a')?.focus();
-    } else if (t.closest('[data-sidebar-close]') || t.closest('#sidebar a')) {
-      close();
+    } else if (t === sidebar() || t.closest('#sidebar a')) {
+      close(); // the backdrop targets the dialog itself; links navigate away
     }
   });
-  document.addEventListener('keydown', (e) => e.key === 'Escape' && close());
+
+  document.addEventListener('close', (e) => {
+    if ((e.target as Element).id === 'sidebar') document.documentElement.style.overflow = '';
+  }, true);
   document.addEventListener('astro:before-swap', close);
 }

@@ -10,6 +10,7 @@ import { initToc } from './toc';
 import { initContent } from './content';
 import { initSearch } from './search';
 import { initSidebar } from './sidebar';
+import { initNavMenu } from './nav-menu';
 import { initMusic } from './music';
 import { initComments } from './comments';
 import { initClock } from './clock';
@@ -27,6 +28,7 @@ initPreferences();
 initScroll();
 initSearch();
 initSidebar();
+initNavMenu();
 initPowerMode();
 initTranslate(); // registers its own astro:page-load handler
 

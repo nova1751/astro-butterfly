@@ -117,6 +117,66 @@ test('search: a cleared query never renders its late results', async ({ page }) 
   await expect(page.locator('[data-search-more]')).toBeHidden();
 });
 
+test('nav dropdown reports its state and closes with Escape', async ({ page }) => {
+  await page.goto('/');
+  const button = page.locator('.has-child > button');
+  const list = page.locator('.has-child .menu-child');
+  await expect(button).toHaveAttribute('aria-expanded', 'false');
+  await expect(list).toBeHidden();
+
+  await button.hover();
+  await expect(button).toHaveAttribute('aria-expanded', 'true');
+  await expect(list).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(button).toHaveAttribute('aria-expanded', 'false');
+  await expect(list).toBeHidden();
+  await page.mouse.move(0, 600);
+
+  // Keyboard: Enter toggles, focus moves into the list, Escape returns to the button.
+  await button.focus();
+  await page.keyboard.press('Enter');
+  await expect(button).toHaveAttribute('aria-expanded', 'true');
+  await page.keyboard.press('Tab');
+  await expect(list.locator('a').first()).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(button).toHaveAttribute('aria-expanded', 'false');
+  await expect(button).toBeFocused();
+
+  // Tabbing past the last link closes it.
+  await page.keyboard.press('Enter');
+  const links = await list.locator('a').count();
+  for (let i = 0; i <= links; i++) await page.keyboard.press('Tab');
+  await expect(button).toHaveAttribute('aria-expanded', 'false');
+});
+
+test('mobile drawer keeps focus inside and closes with Escape @mobile', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  const toggle = page.locator('[data-sidebar-open]');
+  const drawer = page.locator('#sidebar');
+  await toggle.click();
+  await expect(drawer).toBeVisible();
+  const focusLeftDrawer = () =>
+    page.evaluate(() => {
+      const a = document.activeElement;
+      return !!a && a !== document.body && !document.getElementById('sidebar')!.contains(a);
+    });
+  for (let i = 0; i < 15; i++) {
+    await page.keyboard.press('Tab');
+    expect(await focusLeftDrawer(), `Tab ${i + 1} reached the page behind`).toBe(false);
+  }
+  await page.keyboard.press('Escape');
+  await expect(drawer).toBeHidden();
+  await expect(toggle).toBeFocused();
+  expect(await page.evaluate(() => document.documentElement.style.overflow)).toBe('');
+
+  // The dimmed area beside the panel closes it too.
+  await toggle.click();
+  await expect(drawer).toBeVisible();
+  await page.mouse.click(10, 400);
+  await expect(drawer).toBeHidden();
+});
+
 test('feed, sitemap, robots and manifest are generated', async ({ request }) => {
   const feed = await (await request.get('/atom.xml')).text();
   expect(feed.match(/<entry>/g)).toHaveLength(4);
