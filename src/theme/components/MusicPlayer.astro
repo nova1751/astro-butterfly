@@ -163,10 +163,13 @@ import { music } from '@/config';
     text-overflow: ellipsis;
   }
 
-  /* ---- global fixed player (custom.css: tucked in at the left, revealed on hover) ---- */
+  /* ---- global fixed player ---- */
   :root .aplayer.aplayer-fixed {
     --ap-fixed-width: min(400px, 100vw);
     --ap-fixed-height: 68px; /* 66px cover + the body's top and bottom borders */
+    --ap-tab-width: 19px;
+    --ap-preview-width: 85px; /* cover, switcher and outer border */
+    --ap-bottom: env(safe-area-inset-bottom, 0px);
     z-index: 95;
     width: var(--ap-fixed-width);
     max-width: var(--ap-fixed-width); /* APlayer's own 400px loads later */
@@ -175,6 +178,7 @@ import { music } from '@/config';
   }
   :root .aplayer.aplayer-fixed .aplayer-body {
     box-sizing: border-box;
+    bottom: var(--ap-bottom);
     width: var(--ap-fixed-width) !important; /* APlayer writes a content-box width inline. */
     max-width: var(--ap-fixed-width);
     background: var(--ap-bg);
@@ -195,7 +199,9 @@ import { music } from '@/config';
   :root .aplayer.aplayer-fixed.aplayer-narrow .aplayer-info {
     transform: none;
     opacity: 0;
-    transition: opacity 0.12s ease-out;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.12s ease-out, visibility 0s 0.12s;
   }
   /* No animation while APlayer builds the player and collapses it (music.ts). */
   :root .aplayer.ap-init .aplayer-body,
@@ -239,7 +245,7 @@ import { music } from '@/config';
     display: block;
     visibility: hidden;
     opacity: 0;
-    left: calc(19px - var(--ap-fixed-width));
+    left: calc(var(--ap-tab-width) - var(--ap-fixed-width));
     transition: left 0.3s ease, opacity 0.18s ease-out, visibility 0s 0.3s;
   }
   /* With the list open the body's top-right corner meets the list: square it. */
@@ -298,14 +304,27 @@ import { music } from '@/config';
   /* Folded, the player's box still spans the bottom strip of the page: taps there
      belong to the page, only the visible tab takes them. */
   :root .aplayer.aplayer-fixed.aplayer-narrow { pointer-events: none; }
-  :root .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body { pointer-events: auto; }
   :root .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body {
-    width: 85px !important; /* 66px cover + 18px switcher + 1px outside border */
-    left: -66px !important; /* APlayer sets `left` inline */
+    pointer-events: auto;
+    width: var(--ap-preview-width) !important;
+    height: var(--ap-fixed-height);
+    left: calc(var(--ap-tab-width) - var(--ap-preview-width)) !important;
     transition: width 0.3s ease, left 0.3s ease;
   }
   @media (hover: hover) {
-    :root .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body:hover {
+    /* Once the tab is hovered, keep the entire preview area under the pointer
+       while the body slides. The area sits below the body so its controls
+       still get clicks, and only the tab can start the preview. */
+    :root .aplayer.aplayer-fixed.aplayer-narrow:hover::before {
+      content: '';
+      position: fixed;
+      left: 0;
+      bottom: var(--ap-bottom);
+      width: var(--ap-preview-width);
+      height: var(--ap-fixed-height);
+      pointer-events: auto;
+    }
+    :root .aplayer.aplayer-fixed.aplayer-narrow:hover .aplayer-body {
       left: 0 !important;
     }
   }
@@ -325,9 +344,6 @@ import { music } from '@/config';
       max-height: 300px !important;
     }
     :root .aplayer.aplayer-fixed {
-      bottom: env(safe-area-inset-bottom);
-    }
-    :root .aplayer.aplayer-fixed .aplayer-body {
       bottom: env(safe-area-inset-bottom);
     }
     :root .aplayer.aplayer-fixed .aplayer-lrc {
