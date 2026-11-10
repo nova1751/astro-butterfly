@@ -44,6 +44,8 @@
     --card-solid-bg: #fff;
     --card-border: rgba(255, 255, 255, 0.6);
     --nav-bg: rgba(255, 255, 255, 0.92);
+    /* Nav text once the bar is fixed; over the banner it is always #eee. */
+    --nav-font-color: var(--font-color);
     --nav-shadow: 0 1px 0 rgba(15, 23, 42, 0.05), 0 2px 8px -4px rgba(15, 23, 42, 0.18);
     --toast-bg: rgba(255, 255, 255, 0.88);
     --toast-border: rgba(15, 23, 42, 0.08);
@@ -116,6 +118,8 @@
     --card-solid-bg: #121212;
     --card-border: rgba(255, 255, 255, 0.06);
     --nav-bg: rgba(18, 18, 18, 0.88);
+    /* Dimmer than the #eee over the banner, so dark mode shows the switch too. */
+    --nav-font-color: rgba(255, 255, 255, 0.6);
     --nav-shadow: 0 1px 0 rgba(255, 255, 255, 0.05), 0 2px 8px -4px rgba(0, 0, 0, 0.6);
     --toast-bg: rgba(31, 31, 31, 0.9);
     --toast-border: rgba(255, 255, 255, 0.08);
