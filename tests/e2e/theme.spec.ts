@@ -94,6 +94,25 @@ test('site search finds a post', async ({ page }) => {
   await expect(page.locator('[data-search-results] a', { hasText: '标签外挂示例' }).first()).toBeVisible();
 });
 
+test('search: a cleared query never renders its late results', async ({ page }) => {
+  // Result details load slowly, so they arrive after the input has been cleared.
+  await page.route('**/pagefind/fragment/**', async (route) => {
+    await new Promise((r) => setTimeout(r, 1500));
+    await route.continue().catch(() => {});
+  });
+  await page.goto('/');
+  await page.locator('[data-search-open]').first().click();
+  const input = page.locator('[data-search-input]');
+  const stats = page.locator('[data-search-stats]');
+  await input.fill('标签外挂');
+  await expect(stats).toContainText('找到'); // searched; its details are still loading
+  await input.fill('');
+  await expect(stats).toHaveText('');
+  await page.waitForTimeout(2500); // past the slow details
+  await expect(page.locator('[data-search-results] li')).toHaveCount(0);
+  await expect(page.locator('[data-search-more]')).toBeHidden();
+});
+
 test('feed, sitemap, robots and manifest are generated', async ({ request }) => {
   const feed = await (await request.get('/atom.xml')).text();
   expect(feed.match(/<entry>/g)).toHaveLength(4);

@@ -40,19 +40,29 @@ function loadPagefind() {
 
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
-async function renderMore(list: HTMLOListElement, more: HTMLButtonElement) {
+/**
+ * Appends the next page of results. `seq` is the query it belongs to: when another
+ * input (typing, clearing) supersedes it while the details load, nothing is written.
+ */
+async function renderMore(seq: number, list: HTMLOListElement, more: HTMLButtonElement) {
   const slice = results.slice(shown, shown + PAGE_SIZE);
-  shown += slice.length;
-  const items = await Promise.all(slice.map((r) => r.data()));
-  for (const d of items) {
-    const li = document.createElement('li');
-    const sub = d.sub_results?.find((s) => s.url !== d.url && s.url.includes('#'));
-    li.innerHTML = `<a class="search-result-title" href="${esc(d.url)}">${esc(d.meta.title ?? d.url)}</a>${
-      sub ? `<a class="search-result-sub" href="${esc(sub.url)}"># ${esc(sub.title)}</a>` : ''
-    }<p class="search-result-excerpt">${sub?.excerpt ?? d.excerpt}</p>`;
-    list.append(li);
+  more.disabled = true; // one page at a time, so pages can never append out of order
+  try {
+    const items = await Promise.all(slice.map((r) => r.data()));
+    if (seq !== querySeq) return;
+    shown += slice.length;
+    for (const d of items) {
+      const li = document.createElement('li');
+      const sub = d.sub_results?.find((s) => s.url !== d.url && s.url.includes('#'));
+      li.innerHTML = `<a class="search-result-title" href="${esc(d.url)}">${esc(d.meta.title ?? d.url)}</a>${
+        sub ? `<a class="search-result-sub" href="${esc(sub.url)}"># ${esc(sub.title)}</a>` : ''
+      }<p class="search-result-excerpt">${sub?.excerpt ?? d.excerpt}</p>`;
+      list.append(li);
+    }
+    more.hidden = shown >= results.length;
+  } finally {
+    if (seq === querySeq) more.disabled = false;
   }
-  more.hidden = shown >= results.length;
 }
 
 export function initSearch() {
@@ -113,15 +123,18 @@ export function initSearch() {
     const stats = dlg.querySelector<HTMLElement>('[data-search-stats]')!;
     const more = dlg.querySelector<HTMLButtonElement>('[data-search-more]')!;
     const q = input.value.trim();
+    // Every input supersedes the previous one, clearing included: only the latest may render.
+    const seq = ++querySeq;
+    clearTimeout(debounce);
     if (!q) {
+      results = [];
+      shown = 0;
       list.replaceChildren();
       stats.textContent = '';
       more.hidden = true;
+      more.disabled = false;
       return;
     }
-    // own debounce + sequence number: only the latest query may render
-    const seq = ++querySeq;
-    clearTimeout(debounce);
     await wait(200);
     if (seq !== querySeq) return;
     const pf = await loadPagefind().catch(() => undefined);
@@ -135,12 +148,13 @@ export function initSearch() {
     stats.textContent = results.length
       ? `找到 ${results.length} 条结果，用时 ${Math.round(performance.now() - t0)} 毫秒`
       : `没有找到与“${q}”相关的内容`;
-    await renderMore(list, more);
+    await renderMore(seq, list, more);
   });
 
   document.addEventListener('click', (e) => {
     if (!(e.target as Element).closest('[data-search-more]')) return;
     const dlg = dialog()!;
-    renderMore(dlg.querySelector('[data-search-results]')!, dlg.querySelector('[data-search-more]')!);
+    const more = dlg.querySelector<HTMLButtonElement>('[data-search-more]')!;
+    if (!more.disabled) renderMore(querySeq, dlg.querySelector('[data-search-results]')!, more);
   });
 }
