@@ -19,6 +19,9 @@ const API = 'https://busuanzi.ibruce.info/busuanzi';
 const TIMEOUT = 8000;
 let seq = 0;
 
+// Invalidate the old page even when the destination has no counters.
+document.addEventListener('astro:before-swap', () => { seq++; });
+
 function fill(data: Partial<Counts> | null) {
   document.querySelectorAll<HTMLElement>('[data-bsz]').forEach((el) => {
     const v = data?.[el.dataset.bsz as keyof Counts];
@@ -35,10 +38,14 @@ function fill(data: Partial<Counts> | null) {
 }
 
 function count() {
-  const cb = `BusuanziCallback_${Date.now().toString(36)}_${seq++}`;
+  const request = ++seq;
+  const cb = `BusuanziCallback_${Date.now().toString(36)}_${request}`;
   const w = window as unknown as Record<string, unknown>;
   const s = document.createElement('script');
-  const timer = window.setTimeout(() => fill(null), TIMEOUT);
+  const update = (data: Counts | null) => {
+    if (request === seq) fill(data);
+  };
+  const timer = window.setTimeout(() => update(null), TIMEOUT);
   const cleanup = () => {
     s.remove();
     delete w[cb];
@@ -46,7 +53,7 @@ function count() {
   w[cb] = (data: Counts) => {
     clearTimeout(timer);
     cleanup();
-    fill(data);
+    update(data);
   };
   s.src = `${API}?jsonpCallback=${cb}`;
   s.async = true;
@@ -54,7 +61,7 @@ function count() {
   s.onerror = () => {
     clearTimeout(timer);
     cleanup();
-    fill(null);
+    update(null);
   };
   document.head.append(s);
 }

@@ -10,6 +10,7 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [['github'], ['list']] : 'list',
   use: {
+    channel: process.env.PLAYWRIGHT_CHANNEL,
     baseURL: 'http://127.0.0.1:4330',
     trace: 'retain-on-failure',
   },

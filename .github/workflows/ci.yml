@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   check:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
         with:
@@ -41,8 +41,9 @@ jobs:
         run: pnpm test
       - name: Build (Astro + Pagefind)
         run: pnpm build
-      - run: pnpm exec playwright install --with-deps chromium
       - name: Browser tests
+        env:
+          PLAYWRIGHT_CHANNEL: chrome
         run: pnpm test:e2e
       - uses: actions/upload-artifact@v7
         if: failure()
