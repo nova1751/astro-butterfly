@@ -315,7 +315,7 @@ import { music } from '@/config';
     /* Once the tab is hovered, keep the entire preview area under the pointer
        while the body slides. The area sits below the body so its controls
        still get clicks, and only the tab can start the preview. */
-    :root .aplayer.aplayer-fixed.aplayer-narrow:hover::before {
+    :root .aplayer.aplayer-fixed.aplayer-narrow:not(.ap-init):hover::before {
       content: '';
       position: fixed;
       left: 0;
@@ -324,7 +324,7 @@ import { music } from '@/config';
       height: var(--ap-fixed-height);
       pointer-events: auto;
     }
-    :root .aplayer.aplayer-fixed.aplayer-narrow:hover .aplayer-body {
+    :root .aplayer.aplayer-fixed.aplayer-narrow:not(.ap-init):hover .aplayer-body {
       left: 0 !important;
     }
   }

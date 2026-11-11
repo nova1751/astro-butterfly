@@ -178,9 +178,9 @@ async function initGlobal() {
     el.querySelector<HTMLButtonElement>('.aplayer-icon-lrc')!.click();
     exclusive(globalPlayer);
     trigger?.remove();
-    el.classList.remove('ap-init');
-    // Resolve the folded layout before opening so the first click has a start width.
+    // Resolve the tucked layout before hover can pull the cover into view.
     void el.offsetWidth;
+    el.classList.remove('ap-init');
     el.querySelector<HTMLElement>('.aplayer-miniswitcher')?.click();
     el.dataset.state = 'ready';
   } catch (e) {

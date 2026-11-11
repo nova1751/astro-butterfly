@@ -17,9 +17,14 @@ test('the first click animates the fixed player open @mobile', async ({ page, is
     });
     document.addEventListener('transitionrun', (event) => {
       const target = event.target;
-      if (event.propertyName === 'width' && target instanceof HTMLElement && target.matches('#global-music .aplayer-body')) {
-        target.dataset.widthTransition = '';
-      }
+      if (!(target instanceof HTMLElement) || !target.matches('#global-music .aplayer-body')) return;
+      if (event.propertyName === 'width') target.dataset.widthTransition = '';
+      if (event.propertyName !== 'left') return;
+      const slide = target.getAnimations().find((animation) =>
+        animation instanceof CSSTransition && animation.transitionProperty === 'left',
+      );
+      const firstFrame = (slide?.effect as KeyframeEffect | undefined)?.getKeyframes()[0];
+      if (typeof firstFrame?.left === 'string') target.dataset.slideFrom = firstFrame.left;
     });
   });
 
@@ -29,6 +34,7 @@ test('the first click animates the fixed player open @mobile', async ({ page, is
   await expect(player).toHaveAttribute('data-state', 'ready');
   const body = player.locator('.aplayer-body');
   await expect(body).toHaveAttribute('data-width-transition', '');
+  await expect(body).toHaveAttribute('data-slide-from', '-66px');
   const expectedWidth = isMobile ? page.viewportSize()!.width : 400;
   await expect.poll(() => body.evaluate((el) => el.getBoundingClientRect().width))
     .toBe(expectedWidth);
