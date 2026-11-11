@@ -3,6 +3,37 @@ import { expect, test } from '@playwright/test';
 
 const require = createRequire(import.meta.url);
 
+test('the first click animates the fixed player open @mobile', async ({ page, isMobile }) => {
+  await page.route('**/test-playlist', (route) => route.fulfill({
+    json: [{ name: 'Track', url: 'data:audio/mpeg,' }],
+  }));
+  await page.addInitScript(() => {
+    // The theme ships with the global player disabled. Give the real initializer a playlist.
+    document.addEventListener('DOMContentLoaded', () => {
+      document.body.insertAdjacentHTML('beforeend', `
+        <div id="global-music" data-global-music data-api="/test-playlist">
+          <button type="button" data-music-start aria-label="展开音乐播放器">›</button>
+        </div>`);
+    });
+    document.addEventListener('transitionrun', (event) => {
+      const target = event.target;
+      if (event.propertyName === 'width' && target instanceof HTMLElement && target.matches('#global-music .aplayer-body')) {
+        target.dataset.widthTransition = '';
+      }
+    });
+  });
+
+  await page.goto('/');
+  const player = page.locator('#global-music');
+  await player.getByRole('button', { name: '展开音乐播放器' }).click();
+  await expect(player).toHaveAttribute('data-state', 'ready');
+  const body = player.locator('.aplayer-body');
+  await expect(body).toHaveAttribute('data-width-transition', '');
+  const expectedWidth = isMobile ? page.viewportSize()!.width : 400;
+  await expect.poll(() => body.evaluate((el) => el.getBoundingClientRect().width))
+    .toBe(expectedWidth);
+});
+
 test('the fixed player keeps its hover preview stable and tucks back to the tab', async ({ page }) => {
   await page.route(/^https?:\/\/(?!127\.0\.0\.1)/, (route) => route.abort());
   await page.goto('/');

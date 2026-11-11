@@ -144,8 +144,7 @@ async function initGlobal() {
   try {
     const [Ctor, list] = await Promise.all([loadAPlayer(), getGlobalList(el)]);
     const start = pickStart(list);
-    // APlayer builds the player full width and then collapses it; without this
-    // the collapse plays as a 0.3s animation on every first load.
+    // APlayer builds the fixed player in mini mode. Suppress its setup transitions.
     el.classList.add('ap-init');
     globalPlayer = new Ctor({
       container: el,
@@ -167,8 +166,6 @@ async function initGlobal() {
     delete (playerList as Partial<typeof playerList>).switch; // back to APlayer's own
     playerList.switch(start);
     labelControls(el);
-    trigger?.remove();
-    el.querySelector<HTMLButtonElement>('.aplayer-miniswitcher')?.click();
     // Keep a single lyric line visible while allowing its surface to be translucent.
     // APlayer retains its reference to the contents and its native 16px transforms.
     const contents = el.querySelector<HTMLElement>('.aplayer-lrc-contents')!;
@@ -180,9 +177,14 @@ async function initGlobal() {
     // Use the button so APlayer's visibility and button state stay in sync.
     el.querySelector<HTMLButtonElement>('.aplayer-icon-lrc')!.click();
     exclusive(globalPlayer);
+    trigger?.remove();
+    el.classList.remove('ap-init');
+    // Resolve the folded layout before opening so the first click has a start width.
+    void el.offsetWidth;
+    el.querySelector<HTMLElement>('.aplayer-miniswitcher')?.click();
     el.dataset.state = 'ready';
-    requestAnimationFrame(() => requestAnimationFrame(() => el.classList.remove('ap-init')));
   } catch (e) {
+    el.classList.remove('ap-init');
     el.dataset.state = '';
     if (trigger) { trigger.disabled = false; trigger.setAttribute('aria-label', '音乐加载失败，点击重试'); }
     toast(e instanceof MetingRefusal ? `音乐服务：${e.message}` : '音乐加载失败，请稍后重试', 'error');
