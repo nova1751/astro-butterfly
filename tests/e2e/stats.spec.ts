@@ -21,7 +21,8 @@ async function mockCounters(page: Page, origin: string) {
 }
 
 test('counts each Astro page once and releases a previous page request', async ({ page, baseURL }) => {
-  await mockCounters(page, new URL(baseURL!).origin);
+  const origin = new URL(baseURL!).origin;
+  await mockCounters(page, origin);
 
   let markFirstRequested!: (callback: string) => void;
   const firstRequested = new Promise<string>((resolve) => { markFirstRequested = resolve; });
@@ -43,7 +44,7 @@ test('counts each Astro page once and releases a previous page request', async (
     }
     await route.fulfill({
       contentType: 'application/json',
-      body: `try{${callback}({page_pv: 222, site_uv: 12, site_pv: 1234});}catch(e){}`,
+      body: `try{${callback}({page_pv: ${referer.pathname === '/' ? 333 : 222}, site_uv: 12, site_pv: 1234});}catch(e){}`,
     });
   });
 
@@ -65,8 +66,8 @@ test('counts each Astro page once and releases a previous page request', async (
     await page.goBack();
     await expect(page).toHaveURL(/\/archives\/$/);
     await page.goBack();
-    await expect(page).toHaveURL(/\/$/);
-    await expect(page.locator('#test-visits')).toHaveText('222');
+    await expect(page).toHaveURL(`${origin}/`);
+    await expect(page.locator('#test-visits')).toHaveText('333');
     expect(requests).toEqual(['/', '/archives/', '/']);
   } finally {
     releaseFirst();
