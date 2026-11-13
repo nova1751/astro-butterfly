@@ -175,8 +175,8 @@ export const features = {
   outdatedNoticeDays: 365,
   /** activate_power_mode: sparks from the caret while typing */
   powerMode: { enable: true, colorful: true, shake: false, mobile: false },
-  /** 不蒜子 visitor counters (site UV/PV in the aside, page PV in the post meta) */
-  busuanzi: false,
+  /** false disables counters, true uses original Busuanzi, 'busuanzi.cc' uses 3.6.9. */
+  busuanzi: false as boolean | 'busuanzi.cc',
   /** Simplified ⇄ Traditional button in the rightside panel (content is Simplified) */
   translate: true,
   /** alt text shown as a caption under images */

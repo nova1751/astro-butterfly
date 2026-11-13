@@ -1,14 +1,15 @@
 import { expect, test, type Page } from '@playwright/test';
 
 const api = 'https://busuanzi.ibruce.info/busuanzi?*';
+const postApi = 'https://cdn.busuanzi.cc/api.php';
 
-async function mockCounters(page: Page, origin: string) {
+async function mockCounters(page: Page, origin: string, provider = '') {
   await page.route((url) => url.origin !== origin, (route) => route.abort());
   await page.route((url) => url.origin === origin && ['/', '/archives/'].includes(url.pathname), async (route) => {
     const response = await route.fetch();
     const body = (await response.text())
       .replace(/<body\b([^>]*)>/, (_, attrs: string) =>
-        `<body${attrs.replace(/\sdata-busuanzi(?:="")?/, '')} data-busuanzi>`)
+        `<body${attrs.replace(/\sdata-busuanzi(?:="[^"]*")?/, '')} data-busuanzi="${provider}">`)
       .replace('</main>', [
         '<a href="#test-visits" id="test-anchor">Go to counter</a>',
         '<span id="test-visits" data-bsz="page_pv" aria-busy="true">…</span>',
@@ -19,6 +20,67 @@ async function mockCounters(page: Page, origin: string) {
     await route.fulfill({ response, body });
   });
 }
+
+test('busuanzi.cc sends one POST per Astro page and excludes query strings and fragments', async ({ page, baseURL }) => {
+  const origin = new URL(baseURL!).origin;
+  await mockCounters(page, origin, 'busuanzi.cc');
+
+  let markRequested!: () => void;
+  const firstRequested = new Promise<void>((resolve) => { markRequested = resolve; });
+  let releaseFirst!: () => void;
+  const firstMayReply = new Promise<void>((resolve) => { releaseFirst = resolve; });
+  const requests: string[] = [];
+  await page.route(postApi, async (route) => {
+    const request = route.request();
+    const { url, referrer } = JSON.parse(request.postData()!);
+    expect(request.method()).toBe('POST');
+    expect(request.headers()['content-type']).toMatch(/^text\/plain/);
+    expect(request.headers().referer).toBeUndefined();
+    expect(referrer).toBe('');
+    requests.push(url);
+    const firstPage = requests.length === 1;
+    if (firstPage) {
+      markRequested();
+      await firstMayReply;
+    }
+    await route.fulfill({
+      headers: { 'access-control-allow-origin': '*' },
+      json: { busuanzi_page_pv: firstPage ? '111' : '222', busuanzi_site_pv: '1234', busuanzi_site_uv: 0 },
+    });
+  });
+
+  try {
+    await page.goto('/?campaign=testing#test-visits', { waitUntil: 'domcontentloaded' });
+    await firstRequested;
+    await page.locator('#nav a[href="/archives/"]').evaluate((link: HTMLAnchorElement) => link.click());
+    await expect(page).toHaveURL(`${origin}/archives/`);
+    await expect(page.locator('#test-visits')).toHaveText('222');
+    await expect(page.locator('#test-site-views')).toHaveText('1,234');
+    await expect(page.locator('#test-visitors')).toHaveText('0');
+    releaseFirst();
+
+    await page.locator('#test-anchor').click();
+    await expect(page).toHaveURL(`${origin}/archives/#test-visits`);
+    await expect(page.locator('#test-visits')).toHaveText('222');
+    expect(requests).toEqual([`${origin}/`, `${origin}/archives/`]);
+  } finally {
+    releaseFirst();
+  }
+});
+
+test('busuanzi.cc clears the loading state when the service returns an error', async ({ page, baseURL }) => {
+  await mockCounters(page, new URL(baseURL!).origin, 'busuanzi.cc');
+  await page.route(postApi, (route) => route.fulfill({
+    status: 503,
+    headers: { 'access-control-allow-origin': '*' },
+  }));
+
+  await page.goto('/');
+  await expect(page.locator('#test-visits')).toHaveText('—', { timeout: 3000 });
+  await expect(page.locator('#test-visitors')).toHaveText('—');
+  await expect(page.locator('#test-site-views')).toHaveText('—');
+  await expect(page.locator('#test-visits, #test-visitors, #test-site-views').and(page.locator('[aria-busy]'))).toHaveCount(0);
+});
 
 test('counts each Astro page once and releases a previous page request', async ({ page, baseURL }) => {
   const origin = new URL(baseURL!).origin;

@@ -1,20 +1,15 @@
 /**
- * Busuanzi (不蒜子) counters, using the same endpoint as the official 2.3 script:
+ * Busuanzi (不蒜子) counters for the original service or busuanzi.cc 3.6.9:
  * site UV / PV in the aside's webinfo card and the page PV in the post meta.
  *
  * Elements: <span data-bsz="site_uv|site_pv|page_pv">…</span>.
- * One JSONP request per page view (it is the counter: calling it records the view),
- * re-run when Astro swaps in a new page.
+ * One request per page view, re-run when Astro swaps in a new page.
  *
  * Slow or blocked network: the request is async and never blocks rendering; the
- * placeholder "…" turns into "—" after TIMEOUT. A late answer can still fill in
- * while that page is open.
- * The script sends the full page URL as Referer (busuanzi keys page_pv by it); with
- * the browser default policy only the origin is sent and every post would show the
- * homepage's count.
+ * placeholder "…" turns into "—" after TIMEOUT.
  */
 
-type Counts = Partial<Record<'site_uv' | 'site_pv' | 'page_pv', unknown>>;
+type Counts = Partial<Record<string, unknown>>;
 
 const API = 'https://busuanzi.ibruce.info/busuanzi';
 const TIMEOUT = 8000;
@@ -24,9 +19,10 @@ let cancelPending: (() => void) | undefined;
 
 document.addEventListener('astro:before-swap', () => cancelPending?.());
 
-function fill(body: HTMLElement, data: Counts | null) {
+function fill(body: HTMLElement, data: Counts | null, prefix = '') {
   body.querySelectorAll<HTMLElement>('[data-bsz]').forEach((el) => {
-    const v = data?.[el.dataset.bsz as keyof Counts];
+    const raw = data?.[prefix + el.dataset.bsz];
+    const v = typeof raw === 'string' && /^\d+$/.test(raw) ? Number(raw) : raw;
     if (typeof v === 'number' && Number.isSafeInteger(v) && v >= 0) {
       el.textContent = v.toLocaleString('zh-CN');
       el.removeAttribute('aria-busy');
@@ -44,6 +40,36 @@ export function initStats() {
   if (!body.hasAttribute('data-busuanzi') || countedPages.has(body)) return;
   countedPages.add(body);
 
+  if (body.dataset.busuanzi === 'busuanzi.cc') {
+    void countWithPost(body);
+  } else {
+    countWithJsonp(body);
+  }
+}
+
+async function countWithPost(body: HTMLElement) {
+  const url = location.origin + location.pathname;
+  const controller = new AbortController();
+  const cancel = () => controller.abort();
+  cancelPending = cancel;
+  const timer = window.setTimeout(() => {
+    cancel();
+    fill(body, null);
+  }, TIMEOUT);
+
+  try {
+    const { fetchCounts } = await import('./stats-post');
+    const data = await fetchCounts(url, controller.signal);
+    if (!controller.signal.aborted) fill(body, data, 'busuanzi_');
+  } catch {
+    if (!controller.signal.aborted) fill(body, null);
+  } finally {
+    window.clearTimeout(timer);
+    if (cancelPending === cancel) cancelPending = undefined;
+  }
+}
+
+function countWithJsonp(body: HTMLElement) {
   const callbackName = `BusuanziCallback_${Date.now().toString(36)}_${++requestId}`;
   const callbacks = window as unknown as Record<string, (data: Counts | null) => void>;
   const script = document.createElement('script');
@@ -66,6 +92,7 @@ export function initStats() {
   script.onload = script.onerror = () => finish(null);
   script.src = `${API}?jsonpCallback=${callbackName}`;
   script.async = true;
+  // The original service keys page PV by the full Referer.
   script.referrerPolicy = 'no-referrer-when-downgrade';
   document.head.append(script);
 }

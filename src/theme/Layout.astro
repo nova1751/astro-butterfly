@@ -124,7 +124,7 @@ const ogImage = new URL((await optimize(image, imagePresets.social)).src, Astro.
   </head>
   <body
     data-power-mode={features.powerMode.enable ? JSON.stringify(features.powerMode) : undefined}
-    data-busuanzi={features.busuanzi ? '' : undefined}
+    data-busuanzi={features.busuanzi === true ? '' : features.busuanzi || undefined}
   >
     <a class="skip-link" href="#main-content">跳到正文</a>
     <div id="web_bg" aria-hidden="true"></div>
