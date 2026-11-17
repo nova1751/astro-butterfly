@@ -337,8 +337,9 @@
   inset-inline: 0;
   bottom: 0;
   z-index: 2;
+  /* Starts fully transparent, so the bar has no visible top edge. */
   background: linear-gradient(180deg,
-    color-mix(in srgb, var(--ec-frm-edBg, #21252b) 60%, transparent),
+    transparent,
     color-mix(in srgb, var(--ec-frm-edBg, #21252b) 90%, transparent));
 }
 .article-container .expressive-code .code-expand:hover { color: rgba(238, 255, 255, 0.8); }
