@@ -10,7 +10,7 @@ import { envelope, site } from '@/config';
   200px; the envelope stays pinned to the bottom, so it slides down and the letter
   rises out. Keyboard focus and touch focus also open it. Below 600px: letter only.
 -->
-<guestbook-envelope class="envelope" tabindex="0" aria-label={`来自${site.author}的留言`}>
+<guestbook-envelope class="envelope" data-envelope-art="pending" tabindex="0" aria-label={`来自${site.author}的留言`}>
   <div class="envelope-window">
     <img class="envelope-back" src={url(envelope.before)} alt="" width="530" height="316" loading="lazy" decoding="async" />
     <div class="envelope-inner">
@@ -32,15 +32,33 @@ import { envelope, site } from '@/config';
 
 <script>
   class GuestbookEnvelope extends HTMLElement {
+    private desktop = window.matchMedia('(min-width: 600px)');
+
     connectedCallback() {
+      this.desktop.addEventListener('change', this.prepareEnvelope);
+      this.prepareEnvelope();
       if (!this.hasAttribute('data-pointer-active')) {
         this.addEventListener('pointermove', this.enableHover, { passive: true });
       }
     }
 
     disconnectedCallback() {
+      this.desktop.removeEventListener('change', this.prepareEnvelope);
       this.removeEventListener('pointermove', this.enableHover);
     }
+
+    private prepareEnvelope = async () => {
+      if (!this.desktop.matches || this.dataset.envelopeArt !== 'pending') return;
+      this.desktop.removeEventListener('change', this.prepareEnvelope);
+      const layers = this.querySelectorAll<HTMLImageElement>('.envelope-back, .envelope-front');
+
+      try {
+        await Promise.all(Array.from(layers, (image) => image.decode()));
+        this.dataset.envelopeArt = 'ready';
+      } catch {
+        this.dataset.envelopeArt = 'unavailable';
+      }
+    };
 
     private enableHover = (event: PointerEvent) => {
       if (event.pointerType === 'touch') return;
@@ -121,7 +139,7 @@ import { envelope, site } from '@/config';
     display: none;
   }
 
-  @media (min-width: 600px) {
+  @media (min-width: 600px) and (scripting: enabled) {
     .envelope-window {
       position: relative;
       top: 0;
@@ -131,14 +149,30 @@ import { envelope, site } from '@/config';
       overflow: hidden;
       transition: top 1s ease-in-out 0.3s, height 1s ease-in-out 0.3s, margin-bottom 1s ease-in-out 0.3s;
     }
-    .envelope:is([data-pointer-active]:hover, :focus-visible) .envelope-window {
+    /* Reveal the letter only once both envelope layers can be painted. */
+    .envelope[data-envelope-art='pending'] .envelope-inner {
+      visibility: hidden;
+    }
+    .envelope[data-envelope-art='unavailable'] .envelope-window {
+      height: auto;
+      overflow: visible;
+      transition: none;
+    }
+    .envelope[data-envelope-art='unavailable'] :is(.envelope-back, .envelope-front) {
+      display: none;
+    }
+    .envelope[data-envelope-art='unavailable'] .envelope-inner {
+      width: auto;
+      padding-top: 0;
+    }
+    .envelope[data-envelope-art='ready']:is([data-pointer-active]:hover, :focus-visible) .envelope-window {
       top: -200px;
       height: 1050px;
       /* the window moved up 200px: take the gap below back as well */
       margin-bottom: -200px;
     }
     @media (hover: none), (pointer: coarse) {
-      .envelope:focus-within .envelope-window {
+      .envelope[data-envelope-art='ready']:focus-within .envelope-window {
         top: -200px;
         height: 1050px;
         margin-bottom: -200px;
