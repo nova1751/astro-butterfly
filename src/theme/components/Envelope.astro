@@ -10,7 +10,7 @@ import { envelope, site } from '@/config';
   200px; the envelope stays pinned to the bottom, so it slides down and the letter
   rises out. Keyboard focus and touch focus also open it. Below 600px: letter only.
 -->
-<guestbook-envelope class="envelope" data-envelope-art="pending" tabindex="0" aria-label={`来自${site.author}的留言`}>
+<guestbook-envelope class="envelope" data-letter-art="pending" data-envelope-art="pending" tabindex="0" aria-label={`来自${site.author}的留言`}>
   <div class="envelope-window">
     <img class="envelope-back" src={url(envelope.before)} alt="" width="530" height="316" loading="lazy" decoding="async" />
     <div class="envelope-inner">
@@ -34,9 +34,18 @@ import { envelope, site } from '@/config';
   class GuestbookEnvelope extends HTMLElement {
     private desktop = window.matchMedia('(min-width: 600px)');
 
+    private letterImages?: Promise<boolean[]>;
+    private shellImages?: Promise<boolean[]>;
+
     connectedCallback() {
-      this.desktop.addEventListener('change', this.prepareEnvelope);
-      this.prepareEnvelope();
+      if (!this.letterImages) {
+        this.letterImages = this.decodeImages('.letter-cover, .letter-line');
+        void this.letterImages.then(() => { this.dataset.letterArt = 'ready'; });
+      }
+      if (!this.shellImages) {
+        this.desktop.addEventListener('change', this.prepareEnvelope);
+        this.prepareEnvelope();
+      }
       if (!this.hasAttribute('data-pointer-active')) {
         this.addEventListener('pointermove', this.enableHover, { passive: true });
       }
@@ -47,17 +56,28 @@ import { envelope, site } from '@/config';
       this.removeEventListener('pointermove', this.enableHover);
     }
 
-    private prepareEnvelope = async () => {
-      if (!this.desktop.matches || this.dataset.envelopeArt !== 'pending') return;
-      this.desktop.removeEventListener('change', this.prepareEnvelope);
-      const layers = this.querySelectorAll<HTMLImageElement>('.envelope-back, .envelope-front');
+    private decodeImages(selector: string) {
+      const images = this.querySelectorAll<HTMLImageElement>(selector);
+      return Promise.all(Array.from(images, async (image) => {
+        // The closing flap can clip some artwork below the lazy-load viewport.
+        image.loading = 'eager';
+        try {
+          await image.decode();
+          return true;
+        } catch {
+          image.hidden = true;
+          return false;
+        }
+      }));
+    }
 
-      try {
-        await Promise.all(Array.from(layers, (image) => image.decode()));
-        this.dataset.envelopeArt = 'ready';
-      } catch {
-        this.dataset.envelopeArt = 'unavailable';
-      }
+    private prepareEnvelope = () => {
+      if (!this.desktop.matches || this.shellImages) return;
+      this.desktop.removeEventListener('change', this.prepareEnvelope);
+      this.shellImages = this.decodeImages('.envelope-back, .envelope-front');
+      void Promise.all([this.shellImages, this.letterImages]).then(([shell]) => {
+        this.dataset.envelopeArt = shell.every(Boolean) ? 'ready' : 'unavailable';
+      });
     };
 
     private enableHover = (event: PointerEvent) => {
@@ -139,6 +159,16 @@ import { envelope, site } from '@/config';
     display: none;
   }
 
+  .envelope img[hidden] {
+    display: none;
+  }
+
+  @media (scripting: enabled) {
+    .envelope[data-letter-art='pending'] .envelope-window {
+      visibility: hidden;
+    }
+  }
+
   @media (min-width: 600px) and (scripting: enabled) {
     .envelope-window {
       position: relative;
@@ -149,8 +179,8 @@ import { envelope, site } from '@/config';
       overflow: hidden;
       transition: top 1s ease-in-out 0.3s, height 1s ease-in-out 0.3s, margin-bottom 1s ease-in-out 0.3s;
     }
-    /* Reveal the letter only once both envelope layers can be painted. */
-    .envelope[data-envelope-art='pending'] .envelope-inner {
+    /* Paint the letter and the shell together. */
+    .envelope[data-envelope-art='pending'] .envelope-window {
       visibility: hidden;
     }
     .envelope[data-envelope-art='unavailable'] .envelope-window {
