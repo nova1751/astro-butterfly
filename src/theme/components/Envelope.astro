@@ -8,9 +8,9 @@ import { envelope, site } from '@/config';
   a 447px window clips a letter that sits inside the envelope (back image behind it,
   front pocket in front). On hover/focus the window grows to 1050px and moves up
   200px; the envelope stays pinned to the bottom, so it slides down and the letter
-  rises out. Tap/keyboard focus works too (tabindex). Below 600px: letter only.
+  rises out. Keyboard focus and touch focus also open it. Below 600px: letter only.
 -->
-<div class="envelope" tabindex="0" aria-label={`来自${site.author}的留言`}>
+<guestbook-envelope class="envelope" tabindex="0" aria-label={`来自${site.author}的留言`}>
   <div class="envelope-window">
     <img class="envelope-back" src={url(envelope.before)} alt="" width="530" height="316" loading="lazy" decoding="async" />
     <div class="envelope-inner">
@@ -28,13 +28,38 @@ import { envelope, site } from '@/config';
     </div>
     <img class="envelope-front" src={url(envelope.after)} alt="" width="530" height="260" loading="lazy" decoding="async" />
   </div>
-</div>
+</guestbook-envelope>
+
+<script>
+  class GuestbookEnvelope extends HTMLElement {
+    connectedCallback() {
+      if (!this.hasAttribute('data-pointer-active')) {
+        this.addEventListener('pointermove', this.enableHover, { passive: true });
+      }
+    }
+
+    disconnectedCallback() {
+      this.removeEventListener('pointermove', this.enableHover);
+    }
+
+    private enableHover = (event: PointerEvent) => {
+      if (event.pointerType === 'touch') return;
+      // Layout can put the envelope under a stationary pointer on first paint.
+      this.setAttribute('data-pointer-active', '');
+      this.removeEventListener('pointermove', this.enableHover);
+    };
+  }
+
+  if (!customElements.get('guestbook-envelope')) {
+    customElements.define('guestbook-envelope', GuestbookEnvelope);
+  }
+</script>
 
 <style>
   .envelope {
+    display: block;
     width: min(100%, 530px);
     margin: 0 auto 30px;
-    outline: none;
   }
   .envelope img {
     display: block;
@@ -104,13 +129,20 @@ import { envelope, site } from '@/config';
       isolation: isolate;
       height: 447px;
       overflow: hidden;
-      transition: all 1s ease-in-out 0.3s;
+      transition: top 1s ease-in-out 0.3s, height 1s ease-in-out 0.3s, margin-bottom 1s ease-in-out 0.3s;
     }
-    .envelope:is(:hover, :focus, :focus-within) .envelope-window {
+    .envelope:is([data-pointer-active]:hover, :focus-visible) .envelope-window {
       top: -200px;
       height: 1050px;
       /* the window moved up 200px: take the gap below back as well */
       margin-bottom: -200px;
+    }
+    @media (hover: none), (pointer: coarse) {
+      .envelope:focus-within .envelope-window {
+        top: -200px;
+        height: 1050px;
+        margin-bottom: -200px;
+      }
     }
     .envelope .envelope-back,
     .envelope .envelope-front {
