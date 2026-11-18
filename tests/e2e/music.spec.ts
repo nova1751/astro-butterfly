@@ -3,6 +3,61 @@ import { expect, test } from '@playwright/test';
 
 const require = createRequire(import.meta.url);
 
+test('switching tracks scrolls from the playlist position and follows the latest track @mobile', async ({ page }) => {
+  await page.route('http://aplayer.test/', (route) => route.fulfill({
+    contentType: 'text/html',
+    body: '<meta name="viewport" content="width=device-width"><div style="height: 2400px"><div id="player" style="position: fixed; top: 0; width: 280px"></div></div>',
+  }));
+  await page.goto('http://aplayer.test/');
+  await page.addStyleTag({ path: require.resolve('aplayer/dist/APlayer.min.css') });
+  await page.addStyleTag({ content: '.aplayer .aplayer-list ol li { height: 42px; }' });
+  await page.addScriptTag({ path: require.resolve('aplayer/dist/APlayer.min.js') });
+
+  const result = await page.evaluate(async () => {
+    const { APlayer } = window as unknown as {
+      APlayer: new (options: object) => { list: { show(): void; switch(index: number): void } };
+    };
+    const container = document.querySelector<HTMLElement>('#player')!;
+    const player = new APlayer({
+      container,
+      listMaxHeight: '260px',
+      preload: 'none',
+      audio: Array.from({ length: 40 }, (_, i) => ({ name: `Track ${i}`, url: 'data:audio/mpeg,' })),
+    });
+    const list = container.querySelector<HTMLOListElement>('ol')!;
+    const aligned = (index: number) =>
+      Math.abs(list.children[index].getBoundingClientRect().top - list.getBoundingClientRect().top) < 1;
+    const frame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+
+    player.list.show();
+    window.scrollTo(0, 700);
+    player.list.switch(18);
+    for (let i = 0; i < 90 && !aligned(18); i++) await frame();
+    const firstTrackAligned = aligned(18);
+
+    player.list.switch(10);
+    await frame();
+    player.list.switch(4);
+    const positions: number[] = [];
+    for (let i = 0; i < 90 && !aligned(4); i++) {
+      positions.push(list.scrollTop);
+      await frame();
+    }
+    const lastTrackAligned = aligned(4);
+    const stayedUpward = positions.every((top, i) => i === 0 || top <= positions[i - 1]);
+
+    list.scrollTop = 0;
+    player.list.switch(2);
+    await frame();
+    const initialScroll = list.scrollTop;
+    player.list.show();
+    return { firstTrackAligned, lastTrackAligned, stayedUpward, initialScroll, pageScroll: window.scrollY, aligned: aligned(2) };
+  });
+
+  expect(result).toMatchObject({ firstTrackAligned: true, lastTrackAligned: true, stayedUpward: true, pageScroll: 700, aligned: true });
+  expect(result.initialScroll).toBeLessThan(84);
+});
+
 test('the first click animates the fixed player open @mobile', async ({ page, isMobile }) => {
   await page.route('**/test-playlist', (route) => route.fulfill({
     json: [{ name: 'Track', url: 'data:audio/mpeg,' }],
