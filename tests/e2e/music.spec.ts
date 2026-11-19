@@ -89,22 +89,25 @@ test('switching tracks scrolls from the playlist position and follows the latest
     const aligned = (index: number) =>
       Math.abs(list.children[index].getBoundingClientRect().top - list.getBoundingClientRect().top) < 1;
     const frame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+    async function waitForAlignment(index: number, positions?: number[]) {
+      const deadline = performance.now() + 2500;
+      while (!aligned(index) && performance.now() < deadline) {
+        positions?.push(list.scrollTop);
+        await frame();
+      }
+      return aligned(index);
+    }
 
     player.list.show();
     window.scrollTo(0, 700);
     player.list.switch(18);
-    for (let i = 0; i < 90 && !aligned(18); i++) await frame();
-    const firstTrackAligned = aligned(18);
+    const firstTrackAligned = await waitForAlignment(18);
 
     player.list.switch(10);
     await frame();
     player.list.switch(4);
     const positions: number[] = [];
-    for (let i = 0; i < 90 && !aligned(4); i++) {
-      positions.push(list.scrollTop);
-      await frame();
-    }
-    const lastTrackAligned = aligned(4);
+    const lastTrackAligned = await waitForAlignment(4, positions);
     const stayedUpward = positions.every((top, i) => i === 0 || top <= positions[i - 1]);
 
     list.scrollTop = 0;
