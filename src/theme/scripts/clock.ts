@@ -16,7 +16,8 @@ import { useFallbackFont } from './fallback-font';
  */
 
 type Now = { icon: string; text: string; temp: string; humidity: string; windDir: string; windScale: string };
-type Place = { city: string; location: string };
+type Place = { city: string; location: string; ipName?: string };
+type IpPlace = { country?: string; country_code?: string; region?: string; city?: string };
 type Weather = { now: Now };
 
 const WEEK = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
@@ -31,6 +32,27 @@ async function getJSON<T>(url: string): Promise<T> {
 
 const coord = (lon: number, lat: number) => `${lon.toFixed(4)},${lat.toFixed(4)}`;
 
+function chineseName(...names: unknown[]) {
+  return names
+    .map((name) => (typeof name === 'string' ? name.trim() : ''))
+    .find((name) => /\p{Script=Han}/u.test(name) && !/[^\p{Script=Han}\p{N}\p{P}\s]/u.test(name)) ?? '';
+}
+
+function placeLabel(country: string, city: string) {
+  if (country === '中国') return city || country;
+  return [country, city === country ? '' : city].filter(Boolean).join('·');
+}
+
+function ipName(place: IpPlace) {
+  const code = typeof place.country_code === 'string' ? place.country_code.toUpperCase() : '';
+  const country =
+    chineseName(place.country) ||
+    (code && /^[A-Z]{2}$/.test(code) && typeof Intl.DisplayNames === 'function'
+      ? chineseName(new Intl.DisplayNames('zh-CN', { type: 'region', fallback: 'none' }).of(code))
+      : '');
+  return placeLabel(country, chineseName(place.city, place.region));
+}
+
 /** Each provider resolves to a place (city may be empty → named by GeoAPI) or throws. */
 const providers: Record<string, (el: HTMLElement) => Promise<Place>> = {
   async amap(el) {
@@ -40,19 +62,19 @@ const providers: Record<string, (el: HTMLElement) => Promise<Place>> = {
     // non-Chinese IPs come back as empty arrays
     if (typeof d.rectangle !== 'string' || !d.rectangle) throw new Error('amap: not a CN IP');
     const [[x1, y1], [x2, y2]] = d.rectangle.split(';').map((p) => p.split(',').map(Number));
-    return { city: typeof d.city === 'string' ? d.city : '', location: coord((x1 + x2) / 2, (y1 + y2) / 2) };
+    return { city: chineseName(d.city), ipName: '中国', location: coord((x1 + x2) / 2, (y1 + y2) / 2) };
   },
   async ipwho() {
-    const d = await getJSON<{ success: boolean; latitude: number; longitude: number }>(
-      'https://ipwho.is/?fields=success,latitude,longitude',
+    const d = await getJSON<IpPlace & { success: boolean; latitude: number; longitude: number }>(
+      'https://ipwho.is/?fields=success,latitude,longitude,country,country_code,region,city&lang=zh',
     );
     if (!d.success) throw new Error('ipwho: failed');
-    return { city: '', location: coord(d.longitude, d.latitude) };
+    return { city: '', ipName: ipName(d), location: coord(d.longitude, d.latitude) };
   },
   async ipsb() {
-    const d = await getJSON<{ latitude?: number; longitude?: number }>('https://api.ip.sb/geoip');
+    const d = await getJSON<IpPlace & { latitude?: number; longitude?: number }>('https://api.ip.sb/geoip');
     if (d.latitude == null || d.longitude == null) throw new Error('ipsb: no coordinates');
-    return { city: '', location: coord(d.longitude, d.latitude) };
+    return { city: '', ipName: ipName(d), location: coord(d.longitude, d.latitude) };
   },
 };
 
@@ -63,13 +85,15 @@ async function placeName(el: HTMLElement, location: string): Promise<string> {
   );
   const p = d.location?.[0];
   if (d.code !== '200' || !p) throw new Error(`GeoAPI ${d.code}`);
-  return p.country === '中国' ? p.adm2 || p.name : `${p.country}·${p.adm1 || p.name}`;
+  const country = chineseName(p.country);
+  const city = country === '中国' ? chineseName(p.adm2, p.name, p.adm1) : chineseName(p.adm1, p.name, p.adm2);
+  return placeLabel(country, city);
 }
 
 async function locate(el: HTMLElement): Promise<Place> {
   const cached = load<Place>('clock-location');
-  if (cached?.location) return cached;
-  const fallback: Place = { city: el.dataset.fallbackCity!, location: el.dataset.fallbackLocation! };
+  if (cached?.location && chineseName(cached.city)) return cached;
+  const fallback: Place = { city: chineseName(el.dataset.fallbackCity), location: el.dataset.fallbackLocation! };
   let place = fallback;
   if (!('fixed' in el.dataset)) {
     for (const name of (el.dataset.ipLookup ?? '').split(',')) {
@@ -83,11 +107,12 @@ async function locate(el: HTMLElement): Promise<Place> {
   }
   if (!place.city) {
     try {
-      place = { ...place, city: await placeName(el, place.location) };
+      place.city = await placeName(el, place.location);
     } catch {
-      place = { ...place, city: place === fallback ? fallback.city : '未知地区' };
+      // IP lookup can still provide a usable name if GeoAPI fails.
     }
   }
+  place.city ||= place.ipName || '未知地区';
   save('clock-location', place, 0.25);
   return place;
 }
