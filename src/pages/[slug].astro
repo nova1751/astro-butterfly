@@ -12,7 +12,10 @@ import { optimize, imagePresets } from '@/lib/images';
 import { site, aside } from '@/config';
 
 export const getStaticPaths = (async () => {
-  return (await getCollection('pages')).map((page) => ({ params: { slug: page.id }, props: { page } }));
+  // The taxonomy index routes read their own page metadata.
+  return (await getCollection('pages'))
+    .filter(({ id }) => id !== 'categories' && id !== 'tags')
+    .map((page) => ({ params: { slug: page.id }, props: { page } }));
 }) satisfies GetStaticPaths;
 
 const { page } = Astro.props;

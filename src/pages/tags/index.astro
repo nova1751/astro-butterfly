@@ -1,7 +1,11 @@
 ---
+import { getCollection } from 'astro:content';
 import Layout from '@/theme/Layout.astro';
+import Comments from '@/theme/components/Comments.astro';
 import { getTags } from '@/lib/posts';
+import { url } from '@/lib/url';
 
+const [indexPage] = await getCollection('pages', ({ id }) => id === 'tags');
 const tags = (await getTags()).sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'));
 const max = Math.max(...tags.map((t) => t.posts.length));
 const min = Math.min(...tags.map((t) => t.posts.length));
@@ -24,6 +28,7 @@ const scale = (n: number) => (max === min ? 0.5 : (n - min) / (max - min));
         ))
       }
     </div>
+    {(indexPage?.data.comments ?? true) && <Comments path={url('/tags/')} />}
   </div>
 </Layout>
 

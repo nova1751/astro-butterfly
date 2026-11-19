@@ -1,8 +1,12 @@
 ---
+import { getCollection } from 'astro:content';
 import { Icon } from 'astro-icon/components';
 import Layout from '@/theme/Layout.astro';
+import Comments from '@/theme/components/Comments.astro';
 import { getCategories } from '@/lib/posts';
+import { url } from '@/lib/url';
 
+const [indexPage] = await getCollection('pages', ({ id }) => id === 'categories');
 const cats = (await getCategories()).sort((a, b) => b.posts.length - a.posts.length || a.name.localeCompare(b.name));
 const roots = cats.filter((c) => c.path.length === 1);
 const childrenOf = (key: string) => cats.filter((c) => c.path.length > 1 && c.slug.startsWith(`${key}/`) && c.slug.split('/').length === key.split('/').length + 1);
@@ -36,6 +40,7 @@ const childrenOf = (key: string) => cats.filter((c) => c.path.length > 1 && c.sl
         ))
       }
     </ul>
+    {(indexPage?.data.comments ?? true) && <Comments path={url('/categories/')} />}
   </div>
 </Layout>
 

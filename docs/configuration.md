@@ -83,6 +83,7 @@ export const comments = {
 - 评论区是懒加载的：页面滚动到评论区附近时才下载 Twikoo 前端（约 120 KB，gzip 后）。从"最新评论"点进某条评论时，会立即加载并跳转到那条评论。
 - "最新评论"的结果缓存 10 分钟。
 - 单篇文章或页面可以在 Front Matter 里写 `comments: false` 关闭评论。
+- 分类和标签总览也遵循这个开关。分别在 `src/content/pages/categories/index.md` 和 `src/content/pages/tags/index.md` 设置 `title` 与 `comments: false` 即可关闭对应总览页的评论。
 
 ## clock：时钟与天气
 
