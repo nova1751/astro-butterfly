@@ -37,6 +37,7 @@ test('fixed lyrics slide between cues and clear on a seek into the intro @mobile
   const lyrics = player.locator('.aplayer-lrc');
   const current = lyrics.locator('.aplayer-lrc-current');
   const strip = lyrics.locator('.aplayer-lrc-contents');
+  const second = strip.getByText('第二句', { exact: true });
   const at = (seconds: number, event = 'timeupdate') => page.evaluate(([time, type]) => {
     const audio = (window as Window & { lyricsTestAudio?: HTMLAudioElement }).lyricsTestAudio!;
     audio.currentTime = time;
@@ -45,12 +46,25 @@ test('fixed lyrics slide between cues and clear on a seek into the intro @mobile
 
   await at(2.5);
   await expect(current).toHaveText('第一句');
+  await expect(current).toHaveCSS('font-weight', '400');
+  await expect(current).toHaveCSS('transition-property', 'none');
+  const nextColor = await second.evaluate((line) => getComputedStyle(line).color);
+  await expect(current).toHaveCSS('color', nextColor);
   await expect(strip).toHaveCSS('transform', 'matrix(1, 0, 0, 1, 0, -16)');
   await at(4.5);
   await expect(current).toHaveText('第二句');
+  await expect(current).toHaveCSS('color', nextColor);
+  await expect(current).toHaveCSS('font-weight', '400');
   await expect(strip).toHaveCSS('transition-property', 'transform');
   await expect(strip).toHaveCSS('transform', 'matrix(1, 0, 0, 1, 0, -32)');
+  await at(2.5, 'seeking');
+  await expect(current).toHaveText('第一句');
+  await expect(strip).toHaveCSS('transition-property', 'none');
+  await at(2.5);
+  await at(2.5, 'seeked');
+  await expect(strip).toHaveCSS('transition-property', 'none');
   await at(0.5, 'seeked');
+  await expect(current).toHaveText('');
   await expect(lyrics).toHaveCSS('opacity', '0');
   await expect(strip).toHaveCSS('transition-property', 'none');
 
@@ -58,6 +72,7 @@ test('fixed lyrics slide between cues and clear on a seek into the intro @mobile
   await expect(current).toHaveText('第二句');
   await expect(lyrics).toHaveCSS('opacity', '1');
   await at(6.5);
+  await expect(current).toHaveText('');
   await expect(lyrics).toHaveCSS('opacity', '0');
   await at(8.5);
   await expect(current).toHaveText('第三句');

@@ -33,6 +33,7 @@ export function setupFixedLyrics(root: HTMLElement, player: FixedLyricsPlayer) {
   let request: AbortController | undefined;
 
   function update(time = player.audio.currentTime, slide = !player.audio.seeking) {
+    if (!slide) contents.classList.remove('aplayer-lrc-sliding');
     const index = cues.findLastIndex(([start]) => time >= start);
     if (index === current) return;
     contents.classList.toggle('aplayer-lrc-sliding', slide && current >= 0 && Math.abs(index - current) === 1);
@@ -76,7 +77,9 @@ export function setupFixedLyrics(root: HTMLElement, player: FixedLyricsPlayer) {
       })
       .catch(() => { /* A failed lyric request leaves playback running. */ });
   };
-  player.on('seeked', () => update(player.audio.currentTime, false));
+  const snapToPlaybackTime = () => update(player.audio.currentTime, false);
+  player.on('seeking', snapToPlaybackTime);
+  player.on('seeked', snapToPlaybackTime);
   player.on('listclear', () => { request?.abort(); render([]); });
   player.on('destroy', () => request?.abort());
 }

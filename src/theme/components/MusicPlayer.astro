@@ -96,8 +96,8 @@ import { music } from '@/config';
   :root .aplayer .aplayer-lrc::after { display: none; }
   /* APlayer advances lyrics in 16px steps: keep that line height and its transforms. */
   :root .aplayer .aplayer-lrc p { font-size: 13px; color: var(--ap-lyric-muted); opacity: 1; }
-  /* current line in the accent, like the played bar and the active list item */
-  :root .aplayer .aplayer-lrc p.aplayer-lrc-current { color: var(--theme-color); font-weight: 600; }
+  /* The embedded player shows several lines at once. */
+  :root .aplayer:not(.aplayer-fixed) .aplayer-lrc p.aplayer-lrc-current { color: var(--theme-color); font-weight: 600; }
   :root .aplayer {
     --ap-lyric-halo: rgba(255, 255, 255, 0.6);
     /* frosted lyric pill (fixed player) */
@@ -286,6 +286,8 @@ import { music } from '@/config';
     :root .aplayer.aplayer-fixed .aplayer-lrc { background: var(--ap-glass-solid); }
   }
   :root .aplayer.aplayer-fixed .aplayer-lrc p {
+    color: inherit;
+    transition: none;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap; /* a long line never wraps out of the 16px step */
