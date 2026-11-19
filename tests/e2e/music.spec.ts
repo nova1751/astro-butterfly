@@ -3,6 +3,67 @@ import { expect, test } from '@playwright/test';
 
 const require = createRequire(import.meta.url);
 
+test('fixed lyrics slide between cues and clear on a seek into the intro @mobile', async ({ page }) => {
+  await page.route('**/lyrics-playlist', (route) => route.fulfill({
+    json: [{ name: 'Track', url: 'data:audio/mpeg,', lrc: '/lyrics-test.lrc' }],
+  }));
+  await page.route('**/lyrics-test.lrc', (route) => route.fulfill({
+    contentType: 'text/plain; charset=utf-8',
+    body: '[00:02.000]第一句\n[00:04.000]第二句\n[00:06.000]\n[00:08.000]第三句',
+  }));
+  await page.addInitScript(() => {
+    const create = document.createElement.bind(document);
+    document.createElement = ((tag: string, options?: ElementCreationOptions) => {
+      const el = create(tag, options);
+      if (el instanceof HTMLAudioElement) {
+        Object.defineProperty(el, 'currentTime', { value: 0, writable: true });
+        (window as Window & { lyricsTestAudio?: HTMLAudioElement }).lyricsTestAudio = el;
+      }
+      return el;
+    }) as typeof document.createElement;
+    document.addEventListener('DOMContentLoaded', () => {
+      document.body.insertAdjacentHTML('beforeend', `
+        <div id="global-music" data-global-music data-api="/lyrics-playlist">
+          <button type="button" data-music-start>展开音乐播放器</button>
+        </div>`);
+    });
+  });
+
+  await page.goto('/');
+  const player = page.locator('#global-music');
+  await player.getByRole('button', { name: '展开音乐播放器' }).click();
+  await expect(player).toHaveAttribute('data-state', 'ready');
+  await player.locator('.aplayer-icon-lrc').click();
+  const lyrics = player.locator('.aplayer-lrc');
+  const current = lyrics.locator('.aplayer-lrc-current');
+  const strip = lyrics.locator('.aplayer-lrc-contents');
+  const at = (seconds: number, event = 'timeupdate') => page.evaluate(([time, type]) => {
+    const audio = (window as Window & { lyricsTestAudio?: HTMLAudioElement }).lyricsTestAudio!;
+    audio.currentTime = time;
+    audio.dispatchEvent(new Event(type));
+  }, [seconds, event] as const);
+
+  await at(2.5);
+  await expect(current).toHaveText('第一句');
+  await expect(strip).toHaveCSS('transform', 'matrix(1, 0, 0, 1, 0, -16)');
+  await at(4.5);
+  await expect(current).toHaveText('第二句');
+  await expect(strip).toHaveCSS('transition-property', 'transform');
+  await expect(strip).toHaveCSS('transform', 'matrix(1, 0, 0, 1, 0, -32)');
+  await at(0.5, 'seeked');
+  await expect(lyrics).toHaveCSS('opacity', '0');
+  await expect(strip).toHaveCSS('transition-property', 'none');
+
+  await at(4.5, 'seeked');
+  await expect(current).toHaveText('第二句');
+  await expect(lyrics).toHaveCSS('opacity', '1');
+  await at(6.5);
+  await expect(lyrics).toHaveCSS('opacity', '0');
+  await at(8.5);
+  await expect(current).toHaveText('第三句');
+  await expect(lyrics).toHaveCSS('opacity', '1');
+});
+
 test('switching tracks scrolls from the playlist position and follows the latest track @mobile', async ({ page }) => {
   await page.route('http://aplayer.test/', (route) => route.fulfill({
     contentType: 'text/html',

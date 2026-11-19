@@ -1,5 +1,6 @@
 import aplayerCss from 'aplayer/dist/APlayer.min.css?url';
 import { loadStyle } from './load-style';
+import { setupFixedLyrics, type FixedLyricsPlayer } from './music-lyrics';
 import { load, save, toast } from './store';
 
 /**
@@ -7,10 +8,9 @@ import { load, save, toast } from './store';
  * - Global fixed player: created once, lives in a `transition:persist` container.
  * - `::music{}` embeds on the music page: created per page, destroyed on navigation.
  */
-type APlayerInstance = {
+type APlayerInstance = FixedLyricsPlayer & {
   destroy: () => void;
   pause: () => void;
-  on: (ev: string, cb: () => void) => void;
   list: { add: (audio: Playlist) => void; switch: (index: number) => void };
 };
 type APlayerCtor = new (o: object) => APlayerInstance;
@@ -157,6 +157,7 @@ async function initGlobal() {
       lrcType: 3,
       audio: [],
     });
+    setupFixedLyrics(el, globalPlayer);
     // Given tracks, APlayer starts on a random one of its own, fetching its cover and
     // lyrics. Hold that back and start on ours: the list keeps its order, and every
     // track still joins the random order.
@@ -166,13 +167,6 @@ async function initGlobal() {
     delete (playerList as Partial<typeof playerList>).switch; // back to APlayer's own
     playerList.switch(start);
     labelControls(el);
-    // Keep a single lyric line visible while allowing its surface to be translucent.
-    // APlayer retains its reference to the contents and its native 16px transforms.
-    const contents = el.querySelector<HTMLElement>('.aplayer-lrc-contents')!;
-    const viewport = document.createElement('div');
-    viewport.className = 'aplayer-lrc-viewport';
-    contents.before(viewport);
-    viewport.append(contents);
     // Lyrics start off, and the LRC button turns them on when wanted.
     // Use the button so APlayer's visibility and button state stay in sync.
     el.querySelector<HTMLButtonElement>('.aplayer-icon-lrc')!.click();

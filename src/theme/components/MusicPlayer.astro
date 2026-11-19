@@ -278,7 +278,7 @@ import { music } from '@/config';
   }
   /* Fade out on an empty (instrumental) line. The open list stays as it is: it
      stacks above the pill (100 over APlayer's 98), so it simply covers any overlap. */
-  :root .aplayer.aplayer-fixed .aplayer-lrc:has(p.aplayer-lrc-current:empty) {
+  :root .aplayer.aplayer-fixed .aplayer-lrc:not(:has(p.aplayer-lrc-current:not(:empty))) {
     opacity: 0;
     transform: translateX(-50%) translateY(8px) scale(0.95);
   }
@@ -294,6 +294,10 @@ import { music } from '@/config';
   :root .aplayer.aplayer-fixed .aplayer-lrc-viewport {
     height: 16px;
     overflow: hidden;
+  }
+  :root .aplayer.aplayer-fixed .aplayer-lrc-contents { transition: none; }
+  :root .aplayer.aplayer-fixed .aplayer-lrc-contents.aplayer-lrc-sliding {
+    transition: transform 0.25s ease-out;
   }
   :root .aplayer.aplayer-fixed .aplayer-miniswitcher {
     box-sizing: border-box;
