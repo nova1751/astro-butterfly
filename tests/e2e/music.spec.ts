@@ -46,16 +46,17 @@ test('fixed lyrics slide between cues and clear on a seek into the intro @mobile
 
   await at(2.5);
   await expect(current).toHaveText('第一句');
-  await expect(current).toHaveCSS('font-weight', '400');
+  await expect(current).toHaveCSS('font-weight', '600');
   await expect(current).toHaveCSS('transition-property', 'none');
   const themeColor = await player.locator('.aplayer-played').evaluate((bar) => getComputedStyle(bar).backgroundColor);
   await expect(current).toHaveCSS('color', themeColor);
   await expect(second).toHaveCSS('color', themeColor);
+  await expect(second).toHaveCSS('font-weight', '600');
   await expect(strip).toHaveCSS('transform', 'matrix(1, 0, 0, 1, 0, -16)');
   await at(4.5);
   await expect(current).toHaveText('第二句');
   await expect(current).toHaveCSS('color', themeColor);
-  await expect(current).toHaveCSS('font-weight', '400');
+  await expect(current).toHaveCSS('font-weight', '600');
   await expect(strip).toHaveCSS('transition-property', 'transform');
   await expect(strip).toHaveCSS('transform', 'matrix(1, 0, 0, 1, 0, -32)');
   await at(2.5, 'seeking');
@@ -78,6 +79,10 @@ test('fixed lyrics slide between cues and clear on a seek into the intro @mobile
   await at(8.5);
   await expect(current).toHaveText('第三句');
   await expect(lyrics).toHaveCSS('opacity', '1');
+
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await expect.poll(() => strip.evaluate((el) => parseFloat(getComputedStyle(el).transitionDuration)))
+    .toBeLessThan(0.001);
 });
 
 test('switching tracks scrolls from the playlist position and follows the latest track @mobile', async ({ page }) => {
