@@ -139,13 +139,15 @@ export const music = {
 | --- | --- | --- |
 | `outdatedNoticeDays` | `365` | 文章超过这么多天没有更新时，顶部显示过期提醒；`0` 关闭 |
 | `powerMode` | 开 | 在输入框打字时冒出彩色粒子（Butterfly 的 `activate_power_mode`）。`colorful` 彩色、`shake` 抖动、`mobile` 是否在手机上启用 |
-| `busuanzi` | `false` | `true` 使用 [原版不蒜子](https://busuanzi.ibruce.info/)，`'busuanzi.cc'` 使用 [3.6.9](https://www.busuanzi.cc/doc.php)。侧栏显示访客数和总访问量，文章页显示阅读量 |
+| `busuanzi` | `false` | `true` 使用 [原版不蒜子](https://busuanzi.ibruce.info/)，`'busuanzi.cc'` 使用 [3.6.9](https://www.busuanzi.cc/doc.php)，`{ endpoint: 'https://stats.example.com/api/count' }` 使用自建服务。侧栏显示访客数和总访问量，文章页显示阅读量 |
 | `translate` | 开 | 右下角设置里的简繁切换按钮。站点内容需要是简体中文 |
 | `photoCaption` | 开 | 用图片的 alt 文字生成图片说明 |
 
 开启了"减少动态效果"系统设置的访客不会看到打字粒子等动画。
 
 开启后，首次加载和每次 Astro 站内换页各发送一次异步计数请求。原版使用 Referer 区分文章阅读量，并可能设置第三方 Cookie。3.6.9 使用 POST 发送当前页面的域名和路径，历史计数由各自服务维护。切换前请核对数据。超时或缺失的计数显示为横线。
+
+自建服务接收 `POST` 请求（JSON 正文包含 `path` 和 `request_id`），返回 `site_pv`、`site_uv` 和 `page_pv`。统计服务使用 HTTPS，并且与博客处于同一站点时，浏览器可使用同站 Cookie 去重。跨源部署还需要允许博客的精确 CORS 来源和凭据。
 
 ## 其他
 

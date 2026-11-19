@@ -175,8 +175,8 @@ export const features = {
   outdatedNoticeDays: 365,
   /** activate_power_mode: sparks from the caret while typing */
   powerMode: { enable: true, colorful: true, shake: false, mobile: false },
-  /** false disables counters, true uses original Busuanzi, 'busuanzi.cc' uses 3.6.9. */
-  busuanzi: false as boolean | 'busuanzi.cc',
+  /** Use { endpoint: 'https://stats.example.com/api/count' } for self-hosted statistics. */
+  busuanzi: false as boolean | 'busuanzi.cc' | { endpoint: string },
   /** Simplified ⇄ Traditional button in the rightside panel (content is Simplified) */
   translate: true,
   /** alt text shown as a caption under images */

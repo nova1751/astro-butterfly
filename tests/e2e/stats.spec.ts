@@ -2,14 +2,15 @@ import { expect, test, type Page } from '@playwright/test';
 
 const api = 'https://busuanzi.ibruce.info/busuanzi?*';
 const postApi = 'https://cdn.busuanzi.cc/api.php';
+const selfHostedApi = 'https://stats.refrain.site/api/count';
 
-async function mockCounters(page: Page, origin: string, provider = '') {
+async function mockCounters(page: Page, origin: string, provider = '', endpoint = '') {
   await page.route((url) => url.origin !== origin, (route) => route.abort());
   await page.route((url) => url.origin === origin && ['/', '/archives/'].includes(url.pathname), async (route) => {
     const response = await route.fetch();
     const body = (await response.text())
       .replace(/<body\b([^>]*)>/, (_, attrs: string) =>
-        `<body${attrs.replace(/\sdata-busuanzi(?:="[^"]*")?/, '')} data-busuanzi="${provider}">`)
+        `<body${attrs.replace(/\sdata-(?:busuanzi|stats-endpoint)(?:="[^"]*")?/g, '')} data-busuanzi="${provider}"${endpoint ? ` data-stats-endpoint="${endpoint}"` : ''}>`)
       .replace('</main>', [
         '<a href="#test-visits" id="test-anchor">Go to counter</a>',
         '<span id="test-visits" data-bsz="page_pv" aria-busy="true">…</span>',
@@ -20,6 +21,40 @@ async function mockCounters(page: Page, origin: string, provider = '') {
     await route.fulfill({ response, body });
   });
 }
+
+test('self-hosted stats retry the same view and record each Astro navigation once @mobile', async ({ page, baseURL, isMobile }) => {
+  const origin = new URL(baseURL!).origin;
+  const requests: Array<{ path: string; request_id: string }> = [];
+  await mockCounters(page, origin, '', selfHostedApi);
+  await page.route(selfHostedApi, async (route) => {
+    const request = route.request();
+    expect(request.method()).toBe('POST');
+    requests.push(request.postDataJSON());
+    await route.fulfill({
+      status: requests.length === 1 ? 502 : requests.length === 4 ? 503 : 200,
+      headers: { 'access-control-allow-origin': origin, 'access-control-allow-credentials': 'true' },
+      json: { site_pv: 345, site_uv: 20, page_pv: requests.length },
+    });
+  });
+  await page.goto('/?campaign=testing#missing-counter-anchor');
+  await expect(page.locator('#test-visits')).toHaveText('2');
+  expect(requests[0]).toEqual(requests[1]);
+  expect(requests[0].path).toBe('/');
+  if (isMobile) {
+    await page.getByRole('button', { name: '打开菜单' }).click();
+    await page.locator('#sidebar .sidebar-links a[href="/archives/"]').click();
+  } else {
+    await page.locator('#nav a[href="/archives/"]').click();
+  }
+  await expect(page.locator('#test-visits')).toHaveText('3');
+  await page.locator('#test-anchor').click();
+  await page.goBack();
+  expect(requests).toHaveLength(3);
+  await page.goBack();
+  await expect(page.locator('#test-visits')).toHaveText('—');
+  expect(requests.map(({ path }) => path)).toEqual(['/', '/', '/archives/', '/']);
+  expect(new Set(requests.map(({ request_id }) => request_id)).size).toBe(3);
+});
 
 test('busuanzi.cc sends one POST per Astro page and excludes query strings and fragments', async ({ page, baseURL }) => {
   const origin = new URL(baseURL!).origin;

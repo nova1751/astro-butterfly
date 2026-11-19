@@ -1,5 +1,5 @@
 /**
- * Busuanzi (不蒜子) counters for the original service or busuanzi.cc 3.6.9:
+ * Visitor counters for the configured statistics service:
  * site UV / PV in the aside's webinfo card and the page PV in the post meta.
  *
  * Elements: <span data-bsz="site_uv|site_pv|page_pv">…</span>.
@@ -13,6 +13,7 @@ type Counts = Partial<Record<string, unknown>>;
 
 const API = 'https://busuanzi.ibruce.info/busuanzi';
 const TIMEOUT = 8000;
+const SELF_HOSTED_TIMEOUT = 12000;
 const countedPages = new WeakSet<HTMLElement>();
 let requestId = 0;
 let cancelPending: (() => void) | undefined;
@@ -40,27 +41,30 @@ export function initStats() {
   if (!body.hasAttribute('data-busuanzi') || countedPages.has(body)) return;
   countedPages.add(body);
 
-  if (body.dataset.busuanzi === 'busuanzi.cc') {
-    void countWithPost(body);
+  const endpoint = body.dataset.statsEndpoint;
+  if (endpoint || body.dataset.busuanzi === 'busuanzi.cc') {
+    void countWithPost(body, endpoint);
   } else {
     countWithJsonp(body);
   }
 }
 
-async function countWithPost(body: HTMLElement) {
-  const url = location.origin + location.pathname;
+async function countWithPost(body: HTMLElement, endpoint?: string) {
+  const { origin, pathname } = location;
   const controller = new AbortController();
   const cancel = () => controller.abort();
-  cancelPending = cancel;
+  // Let the self-hosted request finish across an Astro swap, including its Set-Cookie.
+  if (!endpoint) cancelPending = cancel;
   const timer = window.setTimeout(() => {
     cancel();
     fill(body, null);
-  }, TIMEOUT);
+  }, endpoint ? SELF_HOSTED_TIMEOUT : TIMEOUT);
 
   try {
-    const { fetchCounts } = await import('./stats-post');
-    const data = await fetchCounts(url, controller.signal);
-    if (!controller.signal.aborted) fill(body, data, 'busuanzi_');
+    const data = endpoint
+      ? await (await import('./stats-self-hosted')).fetchSelfHostedCounts(endpoint, pathname, controller.signal)
+      : await (await import('./stats-post')).fetchCounts(origin + pathname, controller.signal);
+    if (!controller.signal.aborted) fill(body, data, endpoint ? '' : 'busuanzi_');
   } catch {
     if (!controller.signal.aborted) fill(body, null);
   } finally {
