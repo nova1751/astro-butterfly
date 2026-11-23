@@ -15,7 +15,7 @@ import { useFallbackFont } from './fallback-font';
  * Cached: location 6 h (`clock-location`), weather `cacheMinutes` (`clock-weather`).
  */
 
-type Now = { icon: string; text: string; temp: string; humidity: string; windDir: string; windScale: string };
+export type Now = { icon: string; text: string; temp: string; humidity: string; windDir: string; windScale: string };
 type Place = { city: string; location: string; ipName?: string };
 type IpPlace = { country?: string; country_code?: string; region?: string; city?: string };
 type Weather = { now: Now };
@@ -195,22 +195,28 @@ export function initClock() {
   if (!el || el.dataset.ready) return;
   el.dataset.ready = '1';
   startClock(el);
-  // no QWeather key: a plain clock, with no location lookups and no weather line
-  if (!el.dataset.qweatherKey) {
+  const endpoint = el.dataset.weatherEndpoint;
+  if (!endpoint && !el.dataset.qweatherKey) {
     el.querySelectorAll<HTMLElement>('[data-wx-weather], [data-wx-wind], [data-wx-humidity], [data-wx-city]').forEach((n) => (n.hidden = true));
     return;
   }
 
-  const startWeather = () => {
-    locate(el)
-      .then((place) => {
+  const startWeather = async () => {
+    try {
+      if (endpoint) {
+        const { fetchWorkerWeather } = await import('./weather-worker');
+        const weather = await fetchWorkerWeather(endpoint, el);
+        setCity(el, weather.city);
+        renderWeather(el, weather);
+      } else {
+        const place = await locate(el);
         setCity(el, place.city);
-        return fetchWeather(el, place);
-      })
-      .then((w) => renderWeather(el, w))
-      .catch(() => {
-        el.querySelector('[data-wx-text]')!.textContent = '天气暂不可用';
-      });
+        renderWeather(el, await fetchWeather(el, place));
+      }
+    } catch {
+      if (endpoint) setCity(el, '未知地区');
+      el.querySelector('[data-wx-text]')!.textContent = '天气暂不可用';
+    }
   };
 
   if ('IntersectionObserver' in window) {

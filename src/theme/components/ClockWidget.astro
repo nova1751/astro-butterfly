@@ -18,8 +18,9 @@ import { clock } from '@/config';
   transition:persist="card-clock"
   aria-label="时钟与天气"
   data-clock
-  data-amap-key={clock.amapKey}
-  data-qweather-key={clock.qweatherKey}
+  data-weather-endpoint={clock.weatherEndpoint || undefined}
+  data-amap-key={clock.weatherEndpoint ? undefined : clock.amapKey}
+  data-qweather-key={clock.weatherEndpoint ? undefined : clock.qweatherKey}
   data-qweather-host={clock.qweatherHost}
   data-geo-host={clock.geoHost}
   data-ip-lookup={clock.ipLookup.join(',')}

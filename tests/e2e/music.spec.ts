@@ -107,40 +107,42 @@ test('switching tracks scrolls from the playlist position and follows the latest
       audio: Array.from({ length: 40 }, (_, i) => ({ name: `Track ${i}`, url: 'data:audio/mpeg,' })),
     });
     const list = container.querySelector<HTMLOListElement>('ol')!;
-    const aligned = (index: number) =>
-      Math.abs(list.children[index].getBoundingClientRect().top - list.getBoundingClientRect().top) < 1;
+    const aligned = (index: number, edge: 'top' | 'bottom') => {
+      const top = list.getBoundingClientRect().top + list.clientTop;
+      const target = edge === 'top' ? top : top + list.clientHeight;
+      return Math.abs(list.children[index].getBoundingClientRect()[edge] - target) < 1;
+    };
     const frame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-    async function waitForAlignment(index: number, positions?: number[]) {
+    async function waitForAlignment(index: number, edge: 'top' | 'bottom', positions?: number[]) {
       const deadline = performance.now() + 2500;
-      while (!aligned(index) && performance.now() < deadline) {
+      while (!aligned(index, edge) && performance.now() < deadline) {
         positions?.push(list.scrollTop);
         await frame();
       }
-      return aligned(index);
+      return aligned(index, edge);
     }
 
     player.list.show();
     window.scrollTo(0, 700);
     player.list.switch(18);
-    const firstTrackAligned = await waitForAlignment(18);
+    const firstTrackAligned = await waitForAlignment(18, 'bottom');
 
     player.list.switch(10);
     await frame();
     player.list.switch(4);
     const positions: number[] = [];
-    const lastTrackAligned = await waitForAlignment(4, positions);
+    const lastTrackAligned = await waitForAlignment(4, 'top', positions);
     const stayedUpward = positions.every((top, i) => i === 0 || top <= positions[i - 1]);
 
     list.scrollTop = 0;
     player.list.switch(2);
     await frame();
-    const initialScroll = list.scrollTop;
+    const afterSwitch = list.scrollTop;
     player.list.show();
-    return { firstTrackAligned, lastTrackAligned, stayedUpward, initialScroll, pageScroll: window.scrollY, aligned: aligned(2) };
+    return { firstTrackAligned, lastTrackAligned, stayedUpward, afterSwitch, afterShow: list.scrollTop, pageScroll: window.scrollY };
   });
 
-  expect(result).toMatchObject({ firstTrackAligned: true, lastTrackAligned: true, stayedUpward: true, pageScroll: 700, aligned: true });
-  expect(result.initialScroll).toBeLessThan(84);
+  expect(result).toMatchObject({ firstTrackAligned: true, lastTrackAligned: true, stayedUpward: true, pageScroll: 700, afterSwitch: 0, afterShow: 0 });
 });
 
 test('the first click animates the fixed player open @mobile', async ({ page, isMobile }) => {

@@ -262,3 +262,27 @@ test('fixed navigation stays above cards after scrolling down then up @mobile', 
     }
   }
 });
+
+test('the configured weather endpoint supplies the clock and reuses its result', async ({ page }) => {
+  let requests = 0;
+  await page.route('http://127.0.0.1:4330/', async (route) => {
+    const response = await route.fetch();
+    const html = (await response.text()).replace('data-clock ', 'data-clock data-weather-endpoint="/api/weather/local" ');
+    await route.fulfill({ response, body: html });
+  });
+  await page.route('**/api/weather/local', (route) => {
+    requests++;
+    return route.fulfill({ json: {
+      city: '杭州市', location: '120.16,30.27',
+      now: { icon: '100', text: '晴', temp: '24', humidity: '50', windDir: '东风', windScale: '2' },
+    } });
+  });
+  await page.goto('/');
+  const card = page.locator('[data-clock]');
+  await card.scrollIntoViewIfNeeded();
+  await expect(card.locator('[data-wx-city]')).toHaveText('杭州市');
+  await page.reload();
+  await card.scrollIntoViewIfNeeded();
+  await expect(card.locator('[data-wx-text]')).toHaveText('晴');
+  expect(requests).toBe(1);
+});

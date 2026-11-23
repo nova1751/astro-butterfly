@@ -6,7 +6,7 @@ settings:
 
 patchedDependencies:
   aplayer@1.10.1:
-    hash: 987253917d5c863463963ecbe6ee2f3070221c07a262a064799699630b0668b0
+    hash: e20e2c19a4dc4a82b7a4ba5d5809b4c80cad530cc2819041b47926cdfcbc2a74
     path: patches/aplayer@1.10.1.patch
 
 importers:
@@ -33,7 +33,7 @@ importers:
         version: 4.6.0
       aplayer:
         specifier: 1.10.1
-        version: 1.10.1(patch_hash=987253917d5c863463963ecbe6ee2f3070221c07a262a064799699630b0668b0)
+        version: 1.10.1(patch_hash=e20e2c19a4dc4a82b7a4ba5d5809b4c80cad530cc2819041b47926cdfcbc2a74)
       astro:
         specifier: 7.4.7
         version: 7.4.7(@astrojs/markdown-remark@7.3.6)(@types/node@25.6.0)(stylus@0.62.0)(terser@5.46.1)(yaml@2.9.1)
@@ -4111,7 +4111,7 @@ snapshots:
 
   anynum@1.0.1: {}
 
-  aplayer@1.10.1(patch_hash=987253917d5c863463963ecbe6ee2f3070221c07a262a064799699630b0668b0):
+  aplayer@1.10.1(patch_hash=e20e2c19a4dc4a82b7a4ba5d5809b4c80cad530cc2819041b47926cdfcbc2a74):
     dependencies:
       balloon-css: 0.5.2
       promise-polyfill: 7.1.0

@@ -95,6 +95,8 @@ export const aside = {
  */
 export const clock = {
   enable: true,
+  /** Optional weather Worker endpoint, e.g. '/api/weather/local'. */
+  weatherEndpoint: '',
   amapKey: '',
   qweatherKey: '',
   qweatherHost: 'devapi.qweather.com',

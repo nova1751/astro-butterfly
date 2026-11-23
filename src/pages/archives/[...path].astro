@@ -3,6 +3,7 @@ import { url } from '@/lib/url';
 import type { GetStaticPaths } from 'astro';
 import Layout from '@/theme/Layout.astro';
 import ArticleSort from '@/theme/components/ArticleSort.astro';
+import Comments from '@/theme/components/Comments.astro';
 import Pagination from '@/theme/components/Pagination.astro';
 import { getPosts, groupByYear, groupByMonth, paginate, type Post } from '@/lib/posts';
 import { pagination } from '@/config';
@@ -32,5 +33,6 @@ const { base, label, all, page, total, items } = Astro.props;
   <div class="card page-card">
     <ArticleSort title={label} count={all.length} posts={items} />
     <Pagination base={url(base)} current={page} total={total} />
+    {base === '/archives/' && page === 1 && <Comments path={url(base)} />}
   </div>
 </Layout>

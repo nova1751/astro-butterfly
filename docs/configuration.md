@@ -81,6 +81,7 @@ export const comments = {
 
 - 留空：没有评论区，侧栏也不显示"最新评论"卡片。
 - 评论区是懒加载的：页面滚动到评论区附近时才下载 Twikoo 前端（约 120 KB，gzip 后）。从"最新评论"点进某条评论时，会立即加载并跳转到那条评论。
+- 归档评论集中在 `/archives/` 总览首页，年份、月份和分页只展示文章列表。
 - "最新评论"的结果缓存 10 分钟。
 - 单篇文章或页面可以在 Front Matter 里写 `comments: false` 关闭评论。
 - 分类和标签总览也遵循这个开关。分别在 `src/content/pages/categories/index.md` 和 `src/content/pages/tags/index.md` 设置 `title` 与 `comments: false` 即可关闭对应总览页的评论。
@@ -101,14 +102,23 @@ export const comments = {
 
 | 字段 | 说明 |
 | --- | --- |
-| `qweatherKey` | 和风天气 key；留空则只显示时钟 |
+| `weatherEndpoint` | 可选的自建天气接口，例如 `/api/weather/local`。配置后优先使用它，浏览器无需上游 API key |
+| `qweatherKey` | 直连模式的和风天气 key。两种天气配置都留空时只显示时钟 |
 | `qweatherHost` / `geoHost` | 和风天气的 API 域名。如果你的账号在控制台里分配了专属域名，填在这里 |
 | `amapKey` | 高德 key，可选；不填就跳过 `amap` 这一步 |
 | `fixedLocation` | 设为 `true` 时始终显示 `fallback` 城市的天气，不做 IP 定位 |
-| `cacheMinutes` | 天气缓存时长（分钟）。定位结果缓存 6 小时 |
+| `cacheMinutes` | 直连模式的天气缓存时长（分钟）。定位结果缓存 6 小时 |
+
+自建接口接受 GET 请求。自动定位由接口处理；固定城市模式会附带 `lat`、`lon` 查询参数。成功时返回 JSON，例如：
+
+```json
+{"city":"杭州市","location":"120.16,30.27","now":{"icon":"100","text":"晴","temp":"24","humidity":"50","windDir":"东风","windScale":"2"}}
+```
+
+Worker 模式按接口和位置缓存，最长 10 分钟。
 
 > [!WARNING]
-> 这些 key 会出现在浏览器里，属于"公开的浏览器 key"。请在各自的控制台里**把 key 限制为只能从你的域名调用**。
+> 直连模式使用的 key 会出现在浏览器里，属于"公开的浏览器 key"。请在各自的控制台里**把 key 限制为只能从你的域名调用**。
 
 ## music：音乐播放器
 
