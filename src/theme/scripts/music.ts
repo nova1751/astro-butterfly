@@ -1,5 +1,6 @@
 import aplayerCss from 'aplayer/dist/APlayer.min.css?url';
 import { loadStyle } from './load-style';
+import { bindLyricClock } from './lyric-clock';
 import { setupFixedLyrics, type FixedLyricsPlayer } from './music-lyrics';
 import { load, save, toast } from './store';
 
@@ -131,7 +132,11 @@ function warmUpWhenIdle() {
 }
 
 /** Only one player makes sound at a time (APlayer mutex across instances). */
-function exclusive(p: APlayerInstance) {
+function connectPlayback(p: APlayerInstance) {
+  const stop = bindLyricClock(p.audio, () => p.lrc.current, () => {
+    if (p.lrc.current.length) p.lrc.update();
+  });
+  p.on('destroy', stop);
   p.on('play', () => [globalPlayer, ...pagePlayers].forEach((o) => o && o !== p && o.pause()));
 }
 
@@ -170,7 +175,7 @@ async function initGlobal() {
     // Lyrics start off, and the LRC button turns them on when wanted.
     // Use the button so APlayer's visibility and button state stay in sync.
     el.querySelector<HTMLButtonElement>('.aplayer-icon-lrc')!.click();
-    exclusive(globalPlayer);
+    connectPlayback(globalPlayer);
     trigger?.remove();
     // Resolve the tucked layout before hover can pull the cover into view.
     void el.offsetWidth;
@@ -200,7 +205,7 @@ async function initEmbeds() {
         delete el.dataset.failed;
         const p = new Ctor({ container: el, theme: 'var(--theme-color)', preload: 'none', listMaxHeight: `${EMBED_LIST_HEIGHT}px`, lrcType: 3, audio });
         labelControls(el);
-        exclusive(p);
+        connectPlayback(p);
         pagePlayers.push(p);
       } catch (e) {
         el.dataset.failed = '';

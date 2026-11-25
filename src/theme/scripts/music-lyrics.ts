@@ -3,7 +3,7 @@ type Cue = [time: number, text: string];
 export type FixedLyricsPlayer = {
   audio: HTMLAudioElement;
   list: { audios: { lrc?: string }[] };
-  lrc: { switch: (index: number) => void; update: (time?: number) => void };
+  lrc: { current: Cue[]; switch: (index: number) => void; update: (time?: number) => void };
   on: (event: string, callback: () => void) => void;
 };
 
@@ -45,6 +45,7 @@ export function setupFixedLyrics(root: HTMLElement, player: FixedLyricsPlayer) {
 
   function render(next: Cue[]) {
     cues = next;
+    player.lrc.current = next;
     current = -1;
     contents.classList.remove('aplayer-lrc-sliding');
     contents.style.transform = '';

@@ -231,3 +231,35 @@ test('the fixed player keeps its hover preview stable and tucks back to the tab'
   await expect.poll(rightEdge).toBe(19);
   expect(await hitsPlayer(76, bottom - 34)).toBe(false);
 });
+
+test('fixed lyrics advance on the audio clock between timeupdate events', async ({ page }) => {
+  await page.route('**/clock-playlist', (route) => route.fulfill({
+    json: [{ name: 'Clock', url: 'data:audio/mpeg,', lrc: '/clock.lrc' }],
+  }));
+  await page.route('**/clock.lrc', (route) => route.fulfill({ body: '[00:00.00]Start\n[00:00.40]Next' }));
+  await page.addInitScript(() => {
+    const create = document.createElement.bind(document);
+    document.createElement = ((tag: string, options?: ElementCreationOptions) => {
+      const el = create(tag, options);
+      if (el instanceof HTMLAudioElement) {
+        let start = Infinity;
+        Object.defineProperties(el, {
+          paused: { get: () => start === Infinity },
+          readyState: { value: 4 },
+          currentTime: { get: () => Math.max(0, (performance.now() - start) / 1000), set: () => {} },
+        });
+        el.addEventListener('playing', () => { start = performance.now(); });
+        (window as Window & { clockAudio?: HTMLAudioElement }).clockAudio = el;
+      }
+      return el;
+    }) as typeof document.createElement;
+    document.addEventListener('DOMContentLoaded', () => document.body.insertAdjacentHTML('beforeend',
+      '<div id="global-music" data-global-music data-api="/clock-playlist"><button data-music-start>Open</button></div>'));
+  });
+  await page.goto('/');
+  await page.locator('[data-music-start]').click();
+  const current = page.locator('#global-music .aplayer-lrc-current');
+  await expect(current).toHaveText('Start');
+  await page.evaluate(() => (window as Window & { clockAudio?: HTMLAudioElement }).clockAudio!.dispatchEvent(new Event('playing')));
+  await expect(current).toHaveText('Next', { timeout: 2000 });
+});

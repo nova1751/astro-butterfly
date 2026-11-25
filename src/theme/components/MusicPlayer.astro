@@ -96,6 +96,8 @@ import { music } from '@/config';
   :root .aplayer .aplayer-lrc::after { display: none; }
   /* APlayer advances lyrics in 16px steps: keep that line height and its transforms. */
   :root .aplayer .aplayer-lrc p { font-size: 13px; color: var(--ap-lyric-muted); opacity: 1; }
+  :root .aplayer:not(.aplayer-fixed) .aplayer-lrc .aplayer-lrc-contents { transition: transform 0.15s ease-out; }
+  :root .aplayer:not(.aplayer-fixed) .aplayer-lrc p { transition: color 0.15s ease-out; }
   /* The fixed player shows one line at a time, so every line shares the active style. */
   :root .aplayer:not(.aplayer-fixed) .aplayer-lrc p.aplayer-lrc-current,
   :root .aplayer.aplayer-fixed .aplayer-lrc p { color: var(--theme-color); font-weight: 600; }
@@ -299,7 +301,7 @@ import { music } from '@/config';
   }
   :root .aplayer.aplayer-fixed .aplayer-lrc-contents { transition: none; }
   :root .aplayer.aplayer-fixed .aplayer-lrc-contents.aplayer-lrc-sliding {
-    transition: transform 0.25s ease-out;
+    transition: transform 0.15s ease-out;
   }
   :root .aplayer.aplayer-fixed .aplayer-miniswitcher {
     box-sizing: border-box;
