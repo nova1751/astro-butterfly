@@ -51,7 +51,15 @@ function caretPoint(el: Element): { x: number; y: number } | null {
   return rect.height ? { x: rect.left, y: rect.top + rect.height / 2 } : null;
 }
 
-export function initPowerMode() {
+let initialized = false;
+let triggerSpawn: ((target: Element) => void) | undefined;
+
+export function initPowerMode(initialTarget?: Element) {
+  if (initialized) {
+    if (initialTarget) triggerSpawn?.(initialTarget);
+    return;
+  }
+  initialized = true;
   const raw = document.body.dataset.powerMode;
   if (!raw) return;
   const opts: Options = JSON.parse(raw);
@@ -120,6 +128,11 @@ export function initPowerMode() {
     }
     if (opts.shake) shakeUntil = performance.now() + 75;
   };
+
+  triggerSpawn = (target: Element) => {
+    if (!reduced.matches && target.matches(FIELD)) spawn(target);
+  };
+  if (initialTarget) triggerSpawn(initialTarget);
 
   // `input` covers typing, IME commits and deletes; composed so it crosses Twikoo's DOM.
   document.addEventListener('input', (e) => {

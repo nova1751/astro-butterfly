@@ -65,31 +65,33 @@ async function renderMore(seq: number, list: HTMLOListElement, more: HTMLButtonE
   }
 }
 
-export function initSearch() {
-  const dialog = () => document.getElementById('search-dialog') as HTMLDialogElement | null;
+let initialized = false;
+const dialog = () => document.getElementById('search-dialog') as HTMLDialogElement | null;
 
-  const open = async () => {
-    const dlg = dialog();
-    if (!dlg) return;
-    dlg.showModal();
-    useFallbackFont(); // whatever the visitor types
-    document.documentElement.style.overflow = 'hidden';
-    const input = dlg.querySelector<HTMLInputElement>('[data-search-input]')!;
-    input.focus();
-    input.select();
-    try {
-      await loadPagefind();
-    } catch {
-      dlg.querySelector('[data-search-stats]')!.textContent = '搜索索引不可用（开发模式下请先运行 pnpm build）';
-    }
-  };
+export async function openSearch() {
+  initSearch();
+  const dlg = dialog();
+  if (!dlg) return;
+  if (!dlg.open) dlg.showModal();
+  useFallbackFont(); // whatever the visitor types
+  document.documentElement.style.overflow = 'hidden';
+  const input = dlg.querySelector<HTMLInputElement>('[data-search-input]')!;
+  input.focus();
+  input.select();
+  try {
+    await loadPagefind();
+  } catch {
+    dlg.querySelector('[data-search-stats]')!.textContent = '搜索索引不可用（开发模式下请先运行 pnpm build）';
+  }
+}
+
+export function initSearch() {
+  if (initialized) return;
+  initialized = true;
 
   document.addEventListener('click', (e) => {
     const t = e.target as Element;
-    if (t.closest('[data-search-open]')) {
-      e.preventDefault();
-      open();
-    } else if (t.closest('[data-search-close]')) {
+    if (t.closest('[data-search-close]')) {
       dialog()?.close();
     } else if (t instanceof HTMLDialogElement && t.id === 'search-dialog') {
       t.close(); // backdrop click
@@ -103,11 +105,6 @@ export function initSearch() {
     if (e.key === 'Escape' && dialog()?.open) {
       e.preventDefault();
       dialog()!.close();
-      return;
-    }
-    if ((e.key === 'k' && (e.metaKey || e.ctrlKey)) || (e.key === '/' && !/INPUT|TEXTAREA/.test((e.target as Element).tagName) && !(e.target as HTMLElement).isContentEditable)) {
-      e.preventDefault();
-      open();
     }
   });
 

@@ -155,37 +155,11 @@ async function apply() {
   watch();
 }
 
-export function initTranslate() {
-  document.addEventListener('click', async (e) => {
-    const btn = (e.target as Element).closest('[data-translate]');
-    if (!btn) return;
-    const next: Script = script === 'hant' ? 'hans' : 'hant';
-    btn.setAttribute('aria-busy', 'true');
-    try {
-      await table(); // one small request on first use; no-op afterwards
-    } catch {
-      btn.removeAttribute('aria-busy');
-      toast('转换表加载失败，请检查网络后重试', 'error');
-      return;
-    }
-    btn.removeAttribute('aria-busy');
-    script = next;
-    save(KEY, script);
-    if (script === 'hant') {
-      toTraditional(document.body);
-      convertTitle();
-      watch();
-      syncButton();
-      toast('已切换为繁体中文'); // converted by the observer
-    } else {
-      observer?.disconnect();
-      toSimplified();
-      document.title = convert(document.title, toHans!);
-      syncButton();
-      toast('已切换为简体中文');
-    }
-  });
+let initialized = false;
 
+export function initTranslate() {
+  if (initialized) return;
+  initialized = true;
   document.addEventListener('astro:page-load', () => {
     apply().catch(() => {
       /* table failed to load on a bad connection: page simply stays Simplified */
@@ -193,4 +167,35 @@ export function initTranslate() {
   });
   // the next page's <title> arrives in Simplified
   document.addEventListener('astro:after-swap', () => observer?.disconnect());
+  // If loaded dynamically after the first astro:page-load already fired, apply now.
+  apply().catch(() => {});
+}
+
+export async function toggleTranslate(btn: Element) {
+  initTranslate();
+  const next: Script = script === 'hant' ? 'hans' : 'hant';
+  btn.setAttribute('aria-busy', 'true');
+  try {
+    await table(); // one small request on first use; no-op afterwards
+  } catch {
+    btn.removeAttribute('aria-busy');
+    toast('转换表加载失败，请检查网络后重试', 'error');
+    return;
+  }
+  btn.removeAttribute('aria-busy');
+  script = next;
+  save(KEY, script);
+  if (script === 'hant') {
+    toTraditional(document.body);
+    convertTitle();
+    watch();
+    syncButton();
+    toast('已切换为繁体中文'); // converted by the observer
+  } else {
+    observer?.disconnect();
+    toSimplified();
+    document.title = convert(document.title, toHans!);
+    syncButton();
+    toast('已切换为简体中文');
+  }
 }

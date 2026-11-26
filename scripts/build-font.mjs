@@ -37,7 +37,41 @@ const METRICS = 'ascent-override:92.8%;descent-override:24.4%;line-gap-override:
 // Most of the body vocabulary is shared across articles.
 const CHUNK = 1500;
 const HOME_POSTS = 12; // pagination.home
-const SCRIPT_VERSION = 6; // bump when the chunking logic changes
+const SCRIPT_VERSION = 7; // bump when the chunking logic changes
+
+// Common Chinese administrative place-name characters (provinces, prefecture-level
+// cities and suffixes). Kept as a separate lazy chunk in body.css so desktop visitors
+// seeing their city in the aside clock never trigger the 97-rule fallback.css (~111 KB).
+const PLACES =
+  '省市区县自治州盟旗新区岛湾港澳台京津沪渝冀晋辽吉黑苏浙皖闽赣鲁豫鄂湘粤琼川贵云陕甘青藏蒙桂宁新' +
+  '北京天津上海重庆河北石家庄唐山秦皇岛邯郸邢台保定张家口承德沧州廊坊衡水' +
+  '山西太原大同阳泉长治晋城朔州晋中运城忻州临汾吕梁' +
+  '内蒙古呼和浩特包头乌海赤峰通辽鄂尔多斯呼伦贝尔巴彦淖尔乌兰察布兴安锡林郭勒阿拉善' +
+  '辽宁沈阳大连鞍山抚顺本溪丹东锦州营口阜新辽阳盘锦铁岭朝阳葫芦岛' +
+  '吉林长春四平辽源通化白山松原白城延边朝鲜族' +
+  '黑龙江哈尔滨齐齐哈尔鸡西鹤岗双鸭山大庆伊春佳木斯七台河牡丹江黑河绥化大兴安岭' +
+  '江苏南京无锡徐州常州苏州南通连云港淮安盐城扬州镇江泰州宿迁' +
+  '浙江杭州宁波温州嘉兴湖州绍兴金华衢州舟山台州丽水' +
+  '安徽合肥芜湖蚌埠淮南马鞍山淮北铜陵安庆黄山滁州阜阳宿州六安亳州池州宣城' +
+  '福建福州厦门莆田三明泉州漳州南平龙岩宁德' +
+  '江西南昌景德镇萍乡九江新余鹰潭赣州吉安宜春抚州上饶' +
+  '山东济南青岛淄博枣庄东营烟台潍坊济宁泰安威海日照临沂德州聊城滨州菏泽' +
+  '河南郑州开封洛阳平顶山安阳鹤壁新乡焦作濮阳许昌漯河三门峡南阳商丘信阳周口驻马店济源' +
+  '湖北武汉黄石十堰宜昌襄阳鄂州荆门孝感荆州黄冈咸宁随州恩施仙桃潜江天门神农架' +
+  '湖南长沙株洲湘潭衡阳邵阳岳阳常德张家界益阳郴州永州怀化娄底湘西' +
+  '广东广州韶关深圳珠海汕头佛山江门湛江茂名肇庆惠州梅州汕尾河源阳江清远东莞中山潮州揭阳云浮' +
+  '广西南宁柳州桂林梧州北海防城港钦州贵港玉林百色贺州河池来宾崇左' +
+  '海南海口三亚三沙儋州五指山琼海文昌万宁东方' +
+  '四川成都自贡攀枝花泸州德阳绵阳广元遂宁内江乐山南充眉山宜宾广安达州雅安巴中资阳阿坝甘孜凉山' +
+  '贵州贵阳六盘水遵义安顺毕节铜仁黔西南黔东南黔南' +
+  '云南昆明曲靖玉溪保山昭通丽江普洱临沧楚雄红河文山西双版纳大理德宏怒江迪庆' +
+  '西藏拉萨日喀则昌都林芝山南那曲阿里' +
+  '陕西西安铜川宝鸡咸阳渭南延安汉中榆林安康商洛' +
+  '甘肃兰州嘉峪关金昌白银天水武威张掖平凉酒泉庆阳定西陇南临夏甘南' +
+  '青海西宁海东海北黄南海西果洛玉树' +
+  '宁夏银川石嘴山吴忠固原中卫' +
+  '新疆乌鲁木齐克拉玛依吐鲁番哈密昌吉博尔塔拉巴音郭楞阿克苏克孜勒苏喀什和田伊犁塔城阿勒泰' +
+  '香港澳门台湾台北新北桃园台中台南高雄基隆新竹嘉义';
 
 const walk = (dir) =>
   existsSync(dir)
@@ -112,6 +146,11 @@ const rest = [...content.entries()]
 
 const chunks = [shellChars];
 while (rest.length) chunks.push(rest.splice(0, CHUNK));
+const covered = new Set(chunks.flat());
+const placeChars = [...new Set([...PLACES].filter((ch) => isText(ch) && !covered.has(ch)))].sort(
+  (a, b) => a.codePointAt(0) - b.codePointAt(0),
+);
+if (placeChars.length) chunks.push(placeChars);
 
 const key = createHash('sha256')
   .update(JSON.stringify([SCRIPT_VERSION, FONT_VERSION, chunks.map((c) => [...c].sort().join(''))]))

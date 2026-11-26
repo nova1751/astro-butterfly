@@ -3,37 +3,6 @@ import { loadStyle } from './load-style';
 import { toast } from './store';
 import { initCodeBlocks } from './code';
 
-/** Tabs: click + roving keyboard focus (Arrow keys / Home / End). */
-function initTabs(scope: ParentNode) {
-  scope.querySelectorAll<HTMLElement>('[data-tabs]:not([data-ready])').forEach((tabs) => {
-    tabs.dataset.ready = '';
-    const list = tabs.querySelector<HTMLElement>(':scope > .tab-list')!;
-    const buttons = [...list.querySelectorAll<HTMLButtonElement>(':scope > [role=tab]')];
-    const select = (i: number, focus = false) => {
-      buttons.forEach((b, j) => {
-        const on = i === j;
-        b.setAttribute('aria-selected', String(on));
-        b.tabIndex = on ? 0 : -1;
-        const panel = document.getElementById(b.getAttribute('aria-controls')!);
-        if (panel) panel.hidden = !on;
-      });
-      if (focus) buttons[i].focus();
-    };
-    list.addEventListener('click', (e) => {
-      const b = (e.target as Element).closest<HTMLButtonElement>('[role=tab]');
-      if (b) select(buttons.indexOf(b));
-    });
-    list.addEventListener('keydown', (e) => {
-      const i = buttons.indexOf(document.activeElement as HTMLButtonElement);
-      if (i < 0) return;
-      const next = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: buttons.length - 1 }[e.key];
-      if (next === undefined) return;
-      e.preventDefault();
-      select((next + buttons.length) % buttons.length, true);
-    });
-  });
-}
-
 /** Copy: append source attribution for long selections (Butterfly copy.copyright). */
 function initCopyright() {
   document.addEventListener('copy', (e) => {
@@ -49,7 +18,7 @@ function initCopyright() {
 }
 
 /** Image lightbox (PhotoSwipe), loaded on demand. */
-async function openLightbox(link: HTMLAnchorElement) {
+export async function openLightbox(link: HTMLAnchorElement) {
   const container = link.closest('#article-container, .twikoo, #twikoo') ?? document.body;
   const links = [...container.querySelectorAll<HTMLAnchorElement>('a[data-pswp]')];
   const index = Math.max(0, links.indexOf(link));
@@ -83,19 +52,12 @@ export function initContent() {
   if (!globalsReady) {
     globalsReady = true;
     initCopyright();
-    document.addEventListener('click', (e) => {
-      const a = (e.target as Element).closest<HTMLAnchorElement>('a[data-pswp]');
-      if (!a || e.metaKey || e.ctrlKey || e.shiftKey) return;
-      e.preventDefault();
-      openLightbox(a).catch(() => window.open(a.href, '_blank'));
-    });
   }
   // src is the full-size file; the browser shows a srcset candidate in the page.
   document.querySelectorAll<HTMLAnchorElement>('a[data-pswp]:not([href])').forEach((a) => {
     const img = a.querySelector('img');
     if (img) a.href = img.src;
   });
-  initTabs(document);
   initCodeBlocks();
   const outdated = document.querySelector<HTMLElement>('[data-outdated]');
   if (outdated) {
@@ -105,17 +67,4 @@ export function initContent() {
       outdated.hidden = false;
     }
   }
-}
-
-/** Make comment images open in the lightbox too. */
-export function bindCommentImages(scope: Element) {
-  scope.querySelectorAll<HTMLImageElement>('.tk-content img:not(.tk-owo-emotion)').forEach((img) => {
-    if (img.closest('a')) return;
-    const a = document.createElement('a');
-    a.href = img.src;
-    a.dataset.pswp = '';
-    a.setAttribute('aria-label', img.alt || '查看评论图片');
-    img.replaceWith(a);
-    a.append(img);
-  });
 }

@@ -11,7 +11,29 @@ import remarkDirectives from './src/plugins/remark-directives.ts';
 import remarkReading from './src/plugins/remark-reading.ts';
 import remarkMermaid from './src/plugins/remark-mermaid.ts';
 import rehypeContent from './src/plugins/rehype-content.ts';
+import { shellIconCss, contentIconCss } from './src/theme/icons-css.ts';
 import { site } from './src/config.ts';
+
+/** @type {Record<string, string>} */
+const ICON_CSS = {
+  'virtual:icons-shell.css': shellIconCss,
+  'virtual:icons-content.css': contentIconCss,
+};
+
+/** Emit CSS icon masks as hashed, cacheable stylesheets instead of inlining into every HTML <head>. */
+function virtualIconCss() {
+  return {
+    name: 'virtual-icon-css',
+    /** @param {string} id */
+    resolveId(id) {
+      if (id in ICON_CSS) return `\0${id}`;
+    },
+    /** @param {string} id */
+    load(id) {
+      if (id.startsWith('\0') && id.slice(1) in ICON_CSS) return ICON_CSS[id.slice(1)];
+    },
+  };
+}
 
 export default defineConfig({
   // SITE_URL / BASE_PATH let CI build a preview for another host (see .github/workflows/pages.yml)
@@ -22,6 +44,9 @@ export default defineConfig({
   prefetch: { prefetchAll: true, defaultStrategy: 'hover' },
   // Markdown images get a srcset, so phones don't download the full-width file
   image: { layout: 'constrained' },
+  vite: {
+    plugins: [virtualIconCss()],
+  },
   integrations: [
     // must come before any MDX integration; config lives in ec.config.mjs
     expressiveCode(),

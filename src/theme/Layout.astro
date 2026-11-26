@@ -4,8 +4,8 @@ import { optimize, imagePresets, type ImageSource } from '@/lib/images';
 import { ClientRouter } from 'astro:transitions';
 import './generated/lxgw.css';
 import font from './generated/font.json';
+import 'virtual:icons-shell.css';
 import './styles/global.css';
-import { iconCss } from './icons-css';
 import { site, features } from '@/config';
 import Header from './components/Header.astro';
 import Footer from './components/Footer.astro';
@@ -84,8 +84,6 @@ const ogImage = new URL((await optimize(image, imagePresets.social)).src, Astro.
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:image" content={ogImage} />
     <slot name="head" />
-
-    <style set:html={iconCss}></style>
 
     {/* Apply saved theme / aside / read-mode before first paint (also after every client-side navigation). */}
     <script is:inline>

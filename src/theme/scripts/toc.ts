@@ -1,5 +1,10 @@
 let cleanup: (() => void) | undefined;
 
+export function cleanupToc() {
+  cleanup?.();
+  cleanup = undefined;
+}
+
 /**
  * Post TOC: highlights the current section, expands only the active branch
  * (Butterfly toc.expand=false), keeps the active link visible inside the TOC
@@ -7,8 +12,7 @@ let cleanup: (() => void) | undefined;
  * with replaceState (anchor.auto_update) without polluting history.
  */
 export function initToc() {
-  cleanup?.();
-  cleanup = undefined;
+  cleanupToc();
 
   const toc = document.querySelector<HTMLElement>('[data-toc]');
   const article = document.querySelector<HTMLElement>('#article-container');

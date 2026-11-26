@@ -1,6 +1,13 @@
 ---
-import { url } from '@/lib/url';
 import { envelope, site } from '@/config';
+import { optimize, imagePresets } from '@/lib/images';
+
+const [beforeImg, afterImg, coverImg, lineImg] = await Promise.all([
+  optimize(envelope.before, imagePresets.envelopeShell),
+  optimize(envelope.after, imagePresets.envelopeShell),
+  optimize(envelope.cover, imagePresets.envelopeLetter),
+  optimize(envelope.line, imagePresets.envelopeLetter),
+]);
 ---
 
 <!--
@@ -12,21 +19,21 @@ import { envelope, site } from '@/config';
 -->
 <guestbook-envelope class="envelope" data-letter-art="pending" data-envelope-art="pending" tabindex="0" aria-label={`来自${site.author}的留言`}>
   <div class="envelope-window">
-    <img class="envelope-back" src={url(envelope.before)} alt="" width="530" height="316" loading="lazy" decoding="async" />
+    <img class="envelope-back" src={beforeImg.src} srcset={beforeImg.srcset} sizes={beforeImg.sizes} alt="" width="530" height="316" loading="lazy" decoding="async" />
     <div class="envelope-inner">
       <div class="letter">
-        <img class="letter-cover" src={url(envelope.cover)} alt="" width="960" height="590" loading="lazy" decoding="async" />
+        <img class="letter-cover" src={coverImg.src} srcset={coverImg.srcset} sizes={coverImg.sizes} alt="" width="960" height="590" loading="lazy" decoding="async" />
         <div class="letter-body">
           <p class="letter-title">来自{site.author}的留言:</p>
           <div class="letter-message">
             {envelope.message.map((m) => <p>{m}</p>)}
           </div>
-          <img class="letter-line" src={url(envelope.line)} alt="" width="1920" height="95" loading="lazy" decoding="async" />
+          <img class="letter-line" src={lineImg.src} srcset={lineImg.srcset} sizes={lineImg.sizes} alt="" width="1920" height="95" loading="lazy" decoding="async" />
           <p class="letter-bottom">{envelope.bottom}</p>
         </div>
       </div>
     </div>
-    <img class="envelope-front" src={url(envelope.after)} alt="" width="530" height="260" loading="lazy" decoding="async" />
+    <img class="envelope-front" src={afterImg.src} srcset={afterImg.srcset} sizes={afterImg.sizes} alt="" width="530" height="260" loading="lazy" decoding="async" />
   </div>
 </guestbook-envelope>
 

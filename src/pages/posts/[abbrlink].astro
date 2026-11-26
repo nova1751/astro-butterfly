@@ -1,7 +1,8 @@
 ---
 import type { GetStaticPaths } from 'astro';
 import { render } from 'astro:content';
-import 'katex/dist/katex.min.css';
+import katexCss from 'katex/dist/katex.min.css?url';
+import 'virtual:icons-content.css';
 import '@/theme/styles/content.css';
 import '@/theme/styles/tag-plugins.css';
 import Layout from '@/theme/Layout.astro';
@@ -18,7 +19,7 @@ export const getStaticPaths = (async () => {
 
 const { post } = Astro.props;
 const { Content, headings, remarkPluginFrontmatter } = await render(post);
-const { wordcount = 0, minutes = 1 } = remarkPluginFrontmatter as { wordcount?: number; minutes?: number };
+const { wordcount = 0, minutes = 1, hasMath = false } = remarkPluginFrontmatter as { wordcount?: number; minutes?: number; hasMath?: boolean };
 // Rendered when the post is already outdated at build time (most are), so the
 // notice doesn't push the article down after load; content.ts only refreshes the
 // day count, and shows it for a post that crossed the limit since the build.
@@ -36,6 +37,7 @@ const outdated = features.outdatedNoticeDays > 0 && outdatedDays >= features.out
   published={post.data.date}
   modified={post.data.updated}
 >
+  {hasMath && <link slot="head" rel="stylesheet" href={katexCss} />}
   <PostInfo slot="post-info" post={post} words={wordcount} minutes={minutes} />
 
   <article id="post" class="card page-card">

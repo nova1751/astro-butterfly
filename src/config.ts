@@ -155,10 +155,10 @@ export const copyright = {
 
 /** Guestbook envelope (a page with `type: envelope`), after hexo-butterfly-envelope. */
 export const envelope = {
-  cover: '/img/envelope/violet.jpg',
-  line: '/img/envelope/line.png',
-  before: '/img/envelope/before.png',
-  after: '/img/envelope/after.png',
+  cover: '/src/assets/envelope/violet.jpg',
+  line: '/src/assets/envelope/line.png',
+  before: '/src/assets/envelope/before.png',
+  after: '/src/assets/envelope/after.png',
   message: ['有什么想问的？', '有什么想说的？', '有什么想吐槽的？', '哪怕是有什么想吃的，都可以告诉我哦~'],
   bottom: '自动书记人偶竭诚为您服务！',
 };

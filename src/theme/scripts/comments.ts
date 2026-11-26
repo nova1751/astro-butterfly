@@ -1,6 +1,18 @@
 import { load, save } from './store';
-import { bindCommentImages } from './content';
 import { useFallbackFont } from './fallback-font';
+
+/** Make comment images open in the lightbox too. */
+function bindCommentImages(scope: Element) {
+  scope.querySelectorAll<HTMLImageElement>('.tk-content img:not(.tk-owo-emotion)').forEach((img) => {
+    if (img.closest('a')) return;
+    const a = document.createElement('a');
+    a.href = img.src;
+    a.dataset.pswp = '';
+    a.setAttribute('aria-label', img.alt || '查看评论图片');
+    img.replaceWith(a);
+    a.append(img);
+  });
+}
 
 type Twikoo = {
   init: (o: object) => Promise<void>;
@@ -26,33 +38,59 @@ const esc = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`)
 function initCommentBox() {
   const el = document.querySelector<HTMLElement>('#twikoo[data-comment-box]');
   if (!el) return;
+  let observer: MutationObserver | undefined;
+  const checkRenderedText = () => {
+    const text = [...el.querySelectorAll('.tk-content, .tk-nick')].map((n) => n.textContent ?? '').join('');
+    if (text) void useFallbackFont(text);
+  };
   const start = async () => {
     try {
       const tk = await loadTwikoo();
-      useFallbackFont(); // visitors' comments use characters the site never does
+      el.addEventListener('focusin', () => void useFallbackFont(), { once: true });
       await tk.init({ envId: el.dataset.envId, el: '#twikoo', path: el.dataset.path, lang: 'zh-CN' });
+      if (!el.isConnected) return;
       bindCommentImages(el);
-      new MutationObserver(() => bindCommentImages(el)).observe(el, { childList: true, subtree: true });
+      checkRenderedText();
+      observer?.disconnect();
+      observer = new MutationObserver(() => {
+        bindCommentImages(el);
+        checkRenderedText();
+      });
+      observer.observe(el, { childList: true, subtree: true });
     } catch {
       el.innerHTML = '<p class="comment-error">评论加载失败，<button type="button" class="hl-label">重试</button></p>';
       el.querySelector('button')?.addEventListener('click', () => start(), { once: true });
     }
   };
   if (location.hash.startsWith('#') && location.hash.length > 1 && !document.getElementById(location.hash.slice(1))) {
-    start(); // deep link to a comment
+    void start(); // deep link to a comment
+    document.addEventListener('astro:before-swap', () => observer?.disconnect(), { once: true });
     return;
   }
   const io = new IntersectionObserver(
     (entries) => {
       if (entries.some((e) => e.isIntersecting)) {
         io.disconnect();
-        start();
+        void start();
       }
     },
-    { rootMargin: '600px 0px' },
+    { rootMargin: '150px 0px' },
   );
-  io.observe(el);
-  document.addEventListener('astro:before-swap', () => io.disconnect(), { once: true });
+  // Defer observing until after initial load so short pages never race Twikoo against first paint.
+  const observe = () => {
+    if (el.isConnected) io.observe(el);
+  };
+  if (document.readyState === 'complete') observe();
+  else addEventListener('load', observe, { once: true });
+  document.addEventListener(
+    'astro:before-swap',
+    () => {
+      removeEventListener('load', observe);
+      io.disconnect();
+      observer?.disconnect();
+    },
+    { once: true },
+  );
 }
 
 /** Aside "最新评论" card (cached 10 min like Butterfly). */
@@ -97,6 +135,7 @@ function initNewestComments() {
     }
   }, { rootMargin: '300px 0px' });
   io.observe(card);
+  document.addEventListener('astro:before-swap', () => io.disconnect(), { once: true });
 }
 
 export function initComments() {

@@ -2,7 +2,8 @@
 import { url } from '@/lib/url';
 import type { GetStaticPaths } from 'astro';
 import { getCollection, render } from 'astro:content';
-import 'katex/dist/katex.min.css';
+import katexCss from 'katex/dist/katex.min.css?url';
+import 'virtual:icons-content.css';
 import '@/theme/styles/content.css';
 import '@/theme/styles/tag-plugins.css';
 import Layout from '@/theme/Layout.astro';
@@ -19,7 +20,8 @@ export const getStaticPaths = (async () => {
 }) satisfies GetStaticPaths;
 
 const { page } = Astro.props;
-const { Content } = await render(page);
+const { Content, remarkPluginFrontmatter } = await render(page);
+const { hasMath = false } = remarkPluginFrontmatter as { hasMath?: boolean };
 const type = page.data.type;
 const avatar = type === 'about' ? await optimize(site.avatar, imagePresets.avatar) : undefined;
 const isEmpty = !page.body?.trim();
@@ -28,6 +30,7 @@ const title = titles[type ?? ''] ?? page.data.title;
 ---
 
 <Layout title={title} header="page" topImg={page.data.top_img}>
+  {hasMath && <link slot="head" rel="stylesheet" href={katexCss} />}
   <div class="card page-card">
     {type === 'envelope' && <Envelope />}
 

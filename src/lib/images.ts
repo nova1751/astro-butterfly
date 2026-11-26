@@ -14,7 +14,7 @@ import { url } from './url';
 export type ImageSource = ImageMetadata | string;
 export type Img = { src: string; srcset?: string; sizes?: string };
 
-const siteImages = import.meta.glob<{ default: ImageMetadata }>('/src/assets/*.{png,jpg,jpeg,webp,avif,svg}', { eager: true });
+const siteImages = import.meta.glob<{ default: ImageMetadata }>('/src/assets/**/*.{png,jpg,jpeg,webp,avif,svg}', { eager: true });
 
 type Options = {
   /** Fixed output box: both set -> cropped to cover it (thumbnails, avatars). */
@@ -65,6 +65,9 @@ export const imagePresets = {
   avatar: { width: 120, height: 120 },
   logo: { width: 36, height: 36 },
   notFound: { width: 460, height: 300 },
+  /** Guestbook envelope artwork (530px shell on desktop; letter spans up to 475px / 100vw on phones) */
+  envelopeShell: { width: 1060, widths: [530, 1060], sizes: '530px' },
+  envelopeLetter: { width: 960, widths: [480, 960], sizes: '(max-width: 600px) 100vw, 475px' },
   /** Link previews: social platforms don't all read AVIF */
   social: { width: 1200, format: 'jpg' },
   feedIcon: { width: 64, height: 64, format: 'png' },

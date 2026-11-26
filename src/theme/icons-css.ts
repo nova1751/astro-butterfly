@@ -17,39 +17,13 @@ const SETS: Record<string, IconifyJSON> = {
   'fa6-brands': brands as IconifyJSON,
 };
 
-const ICONS: Record<string, string> = {
-  // Butterfly note defaults (flat style, icons: true)
-  'note-default': 'circle-arrow-right',
-  'note-primary': 'circle-plus',
-  'note-info': 'circle-info',
-  'note-success': 'circle-check',
-  'note-warning': 'circle-exclamation',
-  'note-danger': 'circle-minus',
-  // tag-plugins-plus tip badges
-  ban: 'ban',
-  'arrow-up': 'arrow-up',
-  sync: 'arrows-rotate',
-  info: 'circle-info',
-  'info-i': 'info',
-  check: 'circle-check',
-  important: 'circle-exclamation',
-  warning: 'triangle-exclamation',
-  caution: 'circle-xmark',
-  home: 'house',
-  key: 'key',
-  bolt: 'bolt',
-  bell: 'bell',
-  cogs: 'gears',
-  exclamation: 'exclamation',
+/** Shell icons used by global layout, toasts and the aside clock/weather widget. */
+const SHELL_ICONS: Record<string, string> = {
+  // toast + clock/weather widget (shared across all pages)
   checkmark: 'check',
+  'info-i': 'info',
+  exclamation: 'exclamation',
   xmark: 'xmark',
-  link: 'link',
-  scissors: 'scissors',
-  'chevron-down': 'chevron-down',
-  'angle-down': 'angle-down',
-  'angles-down': 'angles-down',
-  copy: 'copy',
-  // toast + clock/weather widget
   sun: 'sun',
   moon: 'moon',
   'wx-cloud-sun': 'cloud-sun',
@@ -64,6 +38,39 @@ const ICONS: Record<string, string> = {
   droplet: 'droplet',
   'location-dot': 'location-dot',
 };
+
+/** Content icons used only on article and standalone Markdown pages. */
+const CONTENT_ICONS: Record<string, string> = {
+  // Butterfly note defaults (flat style, icons: true)
+  'note-default': 'circle-arrow-right',
+  'note-primary': 'circle-plus',
+  'note-info': 'circle-info',
+  'note-success': 'circle-check',
+  'note-warning': 'circle-exclamation',
+  'note-danger': 'circle-minus',
+  // tag-plugins-plus tip badges & article chrome
+  ban: 'ban',
+  'arrow-up': 'arrow-up',
+  sync: 'arrows-rotate',
+  info: 'circle-info',
+  check: 'circle-check',
+  important: 'circle-exclamation',
+  warning: 'triangle-exclamation',
+  caution: 'circle-xmark',
+  home: 'house',
+  key: 'key',
+  bolt: 'bolt',
+  bell: 'bell',
+  cogs: 'gears',
+  link: 'link',
+  scissors: 'scissors',
+  'chevron-down': 'chevron-down',
+  'angle-down': 'angle-down',
+  'angles-down': 'angles-down',
+  copy: 'copy',
+};
+
+const ICONS: Record<string, string> = { ...SHELL_ICONS, ...CONTENT_ICONS };
 
 /** `name` (fa6-solid) or `set:name` → CSS `url("data:image/svg+xml,…")` mask. */
 export function iconUri(spec: string) {
@@ -87,6 +94,11 @@ export function faToIconify(fa: string) {
   return `${set}:${m[2]}`;
 }
 
-export const iconCss = `:root{${Object.entries(ICONS)
-  .map(([k, v]) => `--icon-${k}:${iconUri(v)}`)
-  .join(';')}}`;
+const buildCss = (icons: Record<string, string>) =>
+  `:root{${Object.entries(icons)
+    .map(([k, v]) => `--icon-${k}:${iconUri(v)}`)
+    .join(';')}}`;
+
+export const shellIconCss = buildCss(SHELL_ICONS);
+export const contentIconCss = buildCss(CONTENT_ICONS);
+export const iconCss = buildCss(ICONS);
